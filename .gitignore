@@ -1,0 +1,9 @@
+.aider*
+.env
+.vscode
+build
+bin
+REVIEW.*
+pkg/prompts
+tetris
+diffs
