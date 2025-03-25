@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sqirvy-cli"
+version = "2025.0.0"
+authors = [
+    { name="david howard" },
+]
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [
+]
+
+[project.scripts]
+sqirvy-cli = "sqirvy-cli:
