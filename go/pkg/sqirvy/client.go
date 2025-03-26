@@ -14,7 +14,10 @@ package sqirvy
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/tmc/langchaingo/llms"
 )
 
 const (
@@ -85,4 +88,51 @@ func NewClient(provider string) (Client, error) {
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", provider)
 	}
+}
+
+func QueryTextLangChain(ctx context.Context, llm llms.Model, system string, prompts []string, model string, options Options) (string, error) {
+	if ctx.Err() != nil {
+		return "", fmt.Errorf("request context error %w", ctx.Err())
+	}
+
+	if len(prompts) == 0 {
+		return "", fmt.Errorf("prompts cannot be empty for text query")
+	}
+
+	// Set default and validate temperature
+	if options.Temperature < MinTemperature {
+		options.Temperature = MinTemperature
+	}
+	if options.Temperature > MaxTemperature {
+		return "", fmt.Errorf("temperature must be between %.1f and %.1f", MinTemperature, MaxTemperature)
+	}
+	// Scale temperature for Llama's 0-2 range
+	options.Temperature = (options.Temperature * LlamaTempScale) / MaxTemperature
+
+	// system prompt
+	content := []llms.MessageContent{
+		llms.TextParts(llms.ChatMessageTypeSystem, system),
+	}
+
+	// query prompts
+	for _, prompt := range prompts {
+		content = append(content, llms.TextParts(llms.ChatMessageTypeHuman, prompt))
+	}
+
+	// generate completion
+	completion, err := llm.GenerateContent(
+		ctx, content,
+		llms.WithTemperature(float64(options.Temperature)),
+		llms.WithModel(model),
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate completion: %w", err)
+	}
+
+	var response strings.Builder
+	for _, part := range completion.Choices {
+		response.WriteString(part.Content)
+	}
+
+	return response.String(), nil
 }
