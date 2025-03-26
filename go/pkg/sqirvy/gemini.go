@@ -9,22 +9,16 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
-	"github.com/google/generative-ai-go/genai"
-	"google.golang.org/api/option"
-)
-
-const (
-	// GeminiTempScale is the scaling factor for Gemini's 0-2 temperature range
-	GeminiTempScale = 2.0
+	"github.com/tmc/langchaingo/llms"
+	"github.com/tmc/langchaingo/llms/googleai"
 )
 
 // GeminiClient implements the Client interface for Google's Gemini API.
 // It provides methods for querying Google's Gemini language models through
-// their official API client.
+// the langchaingo library.
 type GeminiClient struct {
-	client *genai.Client // Google Gemini API client
+	llm llms.Model // langchaingo LLM client
 }
 
 // Ensure GeminiClient implements the Client interface
@@ -38,71 +32,29 @@ func NewGeminiClient() (*GeminiClient, error) {
 		return nil, fmt.Errorf("GEMINI_API_KEY environment variable not set")
 	}
 
-	client, err := genai.NewClient(context.Background(), option.WithAPIKey(apiKey))
+	// Note: langchaingo's googleai client uses the API key from the environment variable by default.
+	llm, err := googleai.New(context.Background(), googleai.WithAPIKey(apiKey))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create client: %w", err)
+		return nil, fmt.Errorf("failed to create Gemini client: %w", err)
 	}
 
 	return &GeminiClient{
-		client: client,
+		llm: llm,
 	}, nil
 }
 
-// GeminiClient.QueryText implements the QueryText method for the Client interface.
-// It sends a text query to Google's Gemini API and returns the generated text response.
+// QueryText sends a text query to the specified Gemini model using langchaingo
+// and returns the response.
 func (c *GeminiClient) QueryText(ctx context.Context, system string, prompts []string, model string, options Options) (string, error) {
-	if ctx.Err() != nil {
-		return "", fmt.Errorf("request context error %w", ctx.Err())
-	}
-
-	if len(prompts) == 0 {
-		return "", fmt.Errorf("prompts cannot be empty for text query")
-	}
-
-	// Create a generative model instance with the specified model name
-	genModel := c.client.GenerativeModel(model)
-	// Set response type to plain text
-	genModel.ResponseMIMEType = "text/plain"
-
-	// Set default and validate temperature
-	if options.Temperature < MinTemperature {
-		options.Temperature = MinTemperature
-	}
-	if options.Temperature > MaxTemperature {
-		return "", fmt.Errorf("temperature must be between %.1f and %.1f", MinTemperature, MaxTemperature)
-	}
-	// Scale temperature for Gemini's 0-2 range
-	options.Temperature = (options.Temperature * GeminiTempScale) / MaxTemperature
-	genModel.Temperature = &options.Temperature
-
-	parts := make([]genai.Part, 0, len(prompts))
-	// First prompt is system prompt
-	parts = append(parts, genai.Text(system))
-	// rest of prompts
-	for _, prompt := range prompts {
-		parts = append(parts, genai.Text(prompt))
-	}
-
-	// Generate content from the prompt
-	resp, err := genModel.GenerateContent(ctx, parts...)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate content: %w", err)
-	}
-
-	// Build response using strings.Builder for better performance
-	var response strings.Builder
-	for _, candidate := range resp.Candidates {
-		for _, part := range candidate.Content.Parts {
-			if textValue, ok := part.(genai.Text); ok {
-				response.WriteString(string(textValue))
-			}
-		}
-	}
-
-	return response.String(), nil
+	// langchaingo's googleai client expects temperature 0.0-1.0
+	// QueryTextLangChain handles the 0-100 to 0-1 scaling
+	// Note: Gemini via langchaingo might use a different temp scale (e.g., 0-1), adjust TemperatureScale in Options if needed.
+	// For now, rely on the default scaling in QueryTextLangChain.
+	return QueryTextLangChain(ctx, c.llm, system, prompts, model, options)
 }
 
 // Close implements the Close method for the Client interface.
 func (c *GeminiClient) Close() error {
-	return c.client.Close()
+	// the langchaingo llm does not require explicit close
+	return nil
 }

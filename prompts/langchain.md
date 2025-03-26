@@ -1,6 +1,6 @@
-- refactor anthropoic.go to use langchain similarly to the code in llama.go and openai.go.
+- refactor gemini.go to use langchain similarly to the code in llama.go and openai.go.
 - be sure to import tmc/lanchaingo/llms/anthropic 
-- the anthropic QueryText function should simply call the QueryTextLangChain in client.go and let that function execute the query
+- the gemini QueryText function should simply call the QueryTextLangChain in client.go and let that function execute the query
 
 /add ./go/pkg/sqirvy/client.go
  ./go/pkg/sqirvy/openai.go
