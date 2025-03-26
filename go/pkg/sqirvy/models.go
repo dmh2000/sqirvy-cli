@@ -52,6 +52,7 @@ var modelToProvider = map[string]string{
 	"gemini-1.5-flash":              Gemini,
 	"gemini-1.5-pro":                Gemini,
 	"gemini-2.0-flash-thinking-exp": Gemini,
+
 	// openai models
 	"gpt-4o":      OpenAI,
 	"gpt-4o-mini": OpenAI,

@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/tmc/langchaingo/llms"
-	anthropicllm "github.com/tmc/langchaingo/llms/anthropic"
 )
 
 const (
@@ -28,6 +27,7 @@ const (
 	// Temperature limits for model queries (0-100 scale)
 	MinTemperature = 0.0
 	MaxTemperature = 100.0
+	TempScale      = 2.0
 
 	// request timeout in seconds
 	RequestTimeout = time.Second * 15
@@ -41,8 +41,9 @@ type Provider string
 // Options combines all provider-specific options into a single structure.
 // This allows for provider-specific configuration while maintaining a unified interface.
 type Options struct {
-	Temperature float32 // Controls the randomness of the output
-	MaxTokens   int64   // Maximum number of tokens in the response
+	Temperature      float32 // Controls the randomness of the output
+	TemperatureScale float32 // scaling for temperature range
+	MaxTokens        int64   // Maximum number of tokens in the response
 }
 
 // Client provides a unified interface for AI operations.
@@ -109,11 +110,10 @@ func QueryTextLangChain(ctx context.Context, llm llms.Model, system string, prom
 	}
 	// Scale temperature based on provider expectations (0-1 for Anthropic, 0-2 for others using langchaingo currently)
 	// TODO: Make this scaling more robust, perhaps based on the llm type or provider name.
-	tempScale := LlamaTempScale // Default to 2.0 scale (Llama, OpenAI)
-	if _, ok := llm.(*anthropicllm.LLM); ok {
-		tempScale = 1.0 // Anthropic uses 0.0-1.0
+	if options.TemperatureScale == 0 {
+		options.TemperatureScale = TempScale
 	}
-	options.Temperature = (options.Temperature * tempScale) / MaxTemperature
+	options.Temperature = (options.Temperature * options.TemperatureScale) / MaxTemperature
 
 	// system prompt
 	content := []llms.MessageContent{

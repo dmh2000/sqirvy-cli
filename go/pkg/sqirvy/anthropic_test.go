@@ -41,7 +41,8 @@ func TestAnthropicClient_QueryText(t *testing.T) {
 			ctx := context.Background()
 			// Use a known model from the list
 			model := "claude-3-haiku-20240307"
-			got, err := client.QueryText(ctx, assistant, tt.prompt, model, Options{MaxTokens: GetMaxTokens(model), Temperature: 50})
+			options := Options{MaxTokens: GetMaxTokens(model), Temperature: 50, TemperatureScale: 2.0}
+			got, err := client.QueryText(ctx, assistant, tt.prompt, model, options)
 
 			if tt.wantErr {
 				if err == nil {
