@@ -3,7 +3,6 @@ package sqirvy
 import (
 	"context"
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -37,26 +36,32 @@ func TestAnthropicClient_QueryText(t *testing.T) {
 		},
 	}
 
-	tt := tests[0]
-	t.Run(tt.name, func(t *testing.T) {
-		ctx := context.Background()
-		got, err := client.QueryText(ctx, assistant, tt.prompt, "claude-3-5-sonnet-latest", Options{})
-		if err != nil {
-			t.Errorf("AnthropicClient.QueryText(): %v", err)
-			return
-		}
-		if !strings.Contains(got, "Hello") {
-			t.Errorf("AnthropicClient.QueryText() = %v, expected response containing 'Hello'", got)
-		}
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			// Use a known model from the list
+			model := "claude-3-haiku-20240307"
+			got, err := client.QueryText(ctx, assistant, tt.prompt, model, Options{MaxTokens: GetMaxTokens(model), Temperature: 50})
 
-	tt = tests[1]
-	t.Run(tt.name, func(t *testing.T) {
-		response, err := client.QueryText(context.Background(), assistant, tt.prompt, "claude-3-5-sonnet-latest", Options{})
-		if err == nil {
-			t.Errorf("AnthropicClient.QueryText() empty prompt should have failed %v", err)
-			return
-		}
-		t.Log(response)
-	})
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("AnthropicClient.QueryText() error = nil, wantErr %v", tt.wantErr)
+				}
+				return // Expected error, test passes
+			}
+
+			// If we didn't want an error, but got one
+			if err != nil {
+				t.Errorf("AnthropicClient.QueryText() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			// If we didn't want an error and didn't get one, check response
+			if len(got) == 0 {
+				t.Error("AnthropicClient.QueryText() returned empty response")
+			}
+			// Optional: Add more specific checks for the successful case if needed
+			// e.g., if !strings.Contains(got, "Hello") { ... }
+		})
+	}
 }

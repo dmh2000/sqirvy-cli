@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/tmc/langchaingo/llms"
+	anthropicllm "github.com/tmc/langchaingo/llms/anthropic"
 )
 
 const (
@@ -106,8 +107,13 @@ func QueryTextLangChain(ctx context.Context, llm llms.Model, system string, prom
 	if options.Temperature > MaxTemperature {
 		return "", fmt.Errorf("temperature must be between %.1f and %.1f", MinTemperature, MaxTemperature)
 	}
-	// Scale temperature for Llama's 0-2 range
-	options.Temperature = (options.Temperature * LlamaTempScale) / MaxTemperature
+	// Scale temperature based on provider expectations (0-1 for Anthropic, 0-2 for others using langchaingo currently)
+	// TODO: Make this scaling more robust, perhaps based on the llm type or provider name.
+	tempScale := LlamaTempScale // Default to 2.0 scale (Llama, OpenAI)
+	if _, ok := llm.(*anthropicllm.LLM); ok {
+		tempScale = 1.0 // Anthropic uses 0.0-1.0
+	}
+	options.Temperature = (options.Temperature * tempScale) / MaxTemperature
 
 	// system prompt
 	content := []llms.MessageContent{
