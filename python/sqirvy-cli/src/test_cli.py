@@ -9,9 +9,11 @@ import argparse
 # import os
 # parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # cli_dir = os.path.join(parent_dir, 'src')
-sys.path.append("..")
-print(sys.path)
-from  main import main, parse_arguments
+# Ensure the src directory is discoverable if running tests from a different location
+# A simpler approach if tests are run relative to the python directory:
+sys.path.insert(0, 'src') # Add src to the beginning of the path
+
+from main import main, parse_arguments
 
 class TestSqirvyCliArgs(unittest.TestCase):
 
@@ -69,42 +71,30 @@ class TestSqirvyCliArgs(unittest.TestCase):
         """Test invalid temperature (too low)."""
         test_args = ['-t', '-0.1']
         with patch('sys.argv', ['sqirvy-cli.py'] + test_args):
-            with self.assertRaises(argparse.ArgumentTypeError) as cm:
-                 # We need to trigger the parsing within the context manager
-                 # Since parse_arguments calls parse_args which exits on error,
-                 # we mock exit to catch the ArgumentTypeError
+            # Argparse calls sys.exit on error, which raises SystemExit
+            with self.assertRaises(SystemExit):
                  with patch('argparse.ArgumentParser._print_message'): # Suppress error message print
-                     with patch('sys.exit') as mock_exit:
-                         parse_arguments()
-                         # Check if exit was called, indicating argparse handled the error
-                         mock_exit.assert_called()
-            # Check the error message if exit wasn't called or if needed
-            # This part might be tricky because argparse exits by default
-            # self.assertIn("not in the range [0.0, 2.0)", str(cm.exception))
-
+                     parse_arguments()
+            # No need to assert on cm.exception message unless specifically required,
+            # catching SystemExit confirms argparse's error handling was triggered.
 
     def test_parse_arguments_invalid_temp_high(self):
         """Test invalid temperature (too high)."""
         test_args = ['-t', '2.0']
         with patch('sys.argv', ['sqirvy-cli.py'] + test_args):
-             with self.assertRaises(argparse.ArgumentTypeError) as cm:
-                 with patch('argparse.ArgumentParser._print_message'):
-                     with patch('sys.exit') as mock_exit:
-                         parse_arguments()
-                         mock_exit.assert_called()
-            # self.assertIn("not in the range [0.0, 2.0)", str(cm.exception))
-
+             # Argparse calls sys.exit on error, which raises SystemExit
+             with self.assertRaises(SystemExit):
+                 with patch('argparse.ArgumentParser._print_message'): # Suppress error message print
+                     parse_arguments()
 
     def test_parse_arguments_invalid_temp_format(self):
         """Test invalid temperature (not a float)."""
         test_args = ['-t', 'abc']
         with patch('sys.argv', ['sqirvy-cli.py'] + test_args):
-             with self.assertRaises(argparse.ArgumentTypeError) as cm:
-                 with patch('argparse.ArgumentParser._print_message'):
-                     with patch('sys.exit') as mock_exit:
-                         parse_arguments()
-                         mock_exit.assert_called()
-            # self.assertIn("not a valid float", str(cm.exception))
+             # Argparse calls sys.exit on error, which raises SystemExit
+             with self.assertRaises(SystemExit):
+                 with patch('argparse.ArgumentParser._print_message'): # Suppress error message print
+                     parse_arguments()
 
 
 class TestSqirvyCliMain(unittest.TestCase):
@@ -127,6 +117,7 @@ class TestSqirvyCliMain(unittest.TestCase):
             "Test stdin content\n\n" # Note the extra newline from read()
             "-------------------\n"
         )
+        # Use assertEqual for clearer diffs on failure
         self.assertEqual(mock_stdout.getvalue(), expected_output)
 
     @patch('sys.stdin', io.StringIO("Minimal input"))
@@ -146,6 +137,7 @@ class TestSqirvyCliMain(unittest.TestCase):
             "Minimal input\n"          # Stdin content read
             "-------------------\n"
         )
+        # Use assertEqual for clearer diffs on failure
         self.assertEqual(mock_stdout.getvalue(), expected_output)
 
 
