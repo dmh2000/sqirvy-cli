@@ -8,7 +8,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.exceptions import OutputParserException # For potential future use
 
 # Assuming client.py is in the same directory
-from .client import Client, Options, MinTemperature, MaxTemperature
+from .client import Client, Options, MinTemperature, MaxTemperature, query_text_langchain
 
 # Constants matching Go implementation
 ANTHROPIC_TEMP_SCALE = 1.0 # Anthropic uses 0.0-1.0
@@ -35,6 +35,8 @@ class AnthropicClient(Client):
             prompts: A list of user prompts.
             model: The specific Anthropic model identifier to use.
             options: An Options object containing temperature, max_tokens, etc.
+                     Note: The temperature_scale specific to Anthropic (1.0)
+                     should be set in the Options object before calling.
 
         Returns:
             The text response from the AI model.
@@ -43,47 +45,16 @@ class AnthropicClient(Client):
             ValueError: If prompts list is empty or temperature is out of range.
             Exception: Errors from the LangChain API call.
         """
-        if not prompts:
-            raise ValueError("Prompts list cannot be empty for text query.")
+        # Ensure the correct temperature scale is used for Anthropic
+        if options.temperature_scale is None:
+             options.temperature_scale = ANTHROPIC_TEMP_SCALE
+        elif options.temperature_scale != ANTHROPIC_TEMP_SCALE:
+             # Optionally warn or raise if a different scale is explicitly provided
+             print(f"Warning: Overriding provided temperature_scale ({options.temperature_scale}) with Anthropic's required scale ({ANTHROPIC_TEMP_SCALE})")
+             options.temperature_scale = ANTHROPIC_TEMP_SCALE
 
-        # Validate and scale temperature (0-100 -> 0.0-1.0 for Anthropic)
-        temp = options.temperature if options.temperature is not None else MinTemperature # Default if None
-        if not MinTemperature <= temp <= MaxTemperature:
-             raise ValueError(f"Temperature must be between {MinTemperature} and {MaxTemperature}, got {temp}")
-
-        # Use the specific scale for Anthropic if provided, otherwise default
-        temp_scale = options.temperature_scale if options.temperature_scale is not None else ANTHROPIC_TEMP_SCALE
-        scaled_temperature = (temp * temp_scale) / MaxTemperature
-
-        # Construct messages
-        messages = [SystemMessage(content=system)]
-        for p in prompts:
-            messages.append(HumanMessage(content=p))
-
-        # Prepare LangChain options
-        langchain_options = {
-            "model": model,
-            "temperature": scaled_temperature,
-        }
-        # Add max_tokens if provided in options (LangChain uses max_tokens)
-        if options.max_tokens is not None and options.max_tokens > 0:
-            # Anthropic uses 'max_tokens' in Langchain integration
-            langchain_options["max_tokens"] = int(options.max_tokens)
-
-        try:
-            # Make the API call
-            response = self.llm.invoke(messages, **langchain_options)
-
-            # Extract content from response
-            if hasattr(response, 'content'):
-                return response.content
-            else:
-                # Handle unexpected response structure
-                raise ValueError("Failed to parse content from LLM response.")
-
-        except Exception as e:
-            # Catch and re-raise LangChain or API errors
-            raise Exception(f"Anthropic API query failed: {e}") from e
+        # Delegate to the common LangChain query function
+        return query_text_langchain(self.llm, system, prompts, model, options)
 
 
     def Close(self):
@@ -135,6 +106,7 @@ if __name__ == '__main__':
             # Example query
             try:
                 # Use temperature 0 for deterministic output in example
+                # Explicitly set the correct scale for clarity, though QueryText handles it
                 opts = Options(temperature=0, max_tokens=50, temperature_scale=ANTHROPIC_TEMP_SCALE)
                 test_model = "claude-3-haiku-20240307" # Use a fast model for testing
                 response = client.QueryText(
@@ -148,10 +120,11 @@ if __name__ == '__main__':
 
                 # Test empty prompt error
                 print("\nTesting empty prompt error:")
-                with client.QueryText("System", [], test_model, opts) as cm:
-                    pass # Should raise ValueError
-            except ValueError as e:
-                 print(f"Successfully caught expected ValueError: {e}")
+                try:
+                    client.QueryText("System", [], test_model, opts)
+                except ValueError as e:
+                    print(f"Successfully caught expected ValueError: {e}")
+
             except Exception as e:
                 print(f"An unexpected error occurred during query: {e}")
 

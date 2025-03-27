@@ -7,7 +7,10 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
 # Assuming client.py is in the same directory
-from .client import Client, Options
+from .client import Client, Options, query_text_langchain, DefaultTempScale
+
+# Constants specific to OpenAI if needed, otherwise use defaults from client.py
+OPENAI_TEMP_SCALE = DefaultTempScale # OpenAI typically uses 0.0-2.0, matching default
 
 class OpenAIClient(Client):
     """
@@ -31,21 +34,22 @@ class OpenAIClient(Client):
             prompts: A list of user prompts.
             model: The specific OpenAI model identifier to use.
             options: An Options object containing temperature, max_tokens, etc.
+                     Uses the default temperature scale (2.0) if not specified.
 
         Returns:
             The text response from the AI model.
 
         Raises:
-            NotImplementedError: Placeholder until fully implemented.
+            ValueError: If prompts list is empty or temperature is out of range.
             Exception: Errors from the LangChain API call.
         """
-        # TODO: Implement actual query logic using self.llm
-        #       - Construct messages (SystemMessage, HumanMessage)
-        #       - Handle temperature scaling (OpenAI uses 0.0-2.0)
-        #       - Call self.llm.invoke(...)
-        print(f"Placeholder: Querying OpenAI model {model} with system prompt and {len(prompts)} user prompts.")
-        print(f"Options: {options}")
-        raise NotImplementedError("OpenAIClient.QueryText is not yet implemented")
+        # Ensure the correct temperature scale is used (defaults to 2.0 if None)
+        if options.temperature_scale is None:
+             options.temperature_scale = OPENAI_TEMP_SCALE
+
+        # Delegate to the common LangChain query function
+        return query_text_langchain(self.llm, system, prompts, model, options)
+
 
     def Close(self):
         """
@@ -81,8 +85,8 @@ def NewOpenAIClient() -> OpenAIClient:
             print(f"Using OpenAI Base URL: {base_url}") # Info message
 
         # Pass the API key explicitly and base_url if provided
+        # Model is specified during the query
         llm = ChatOpenAI(**init_args)
-        # Example: llm = ChatOpenAI(model="gpt-4o", api_key=api_key, base_url=base_url)
     except Exception as e:
         # Catch potential initialization errors from LangChain
         raise Exception(f"Failed to create LangChain OpenAI client: {e}") from e
@@ -91,28 +95,43 @@ def NewOpenAIClient() -> OpenAIClient:
 
 # Example Usage (optional, for testing)
 if __name__ == '__main__':
-    try:
-        # Ensure OPENAI_API_KEY (and optionally OPENAI_BASE_URL) is set
-        client = NewOpenAIClient()
-        print("OpenAIClient created successfully.")
-
-        # Example of how QueryText *might* be called (will raise NotImplementedError)
+    # Ensure OPENAI_API_KEY (and optionally OPENAI_BASE_URL) is set
+    if not os.getenv("OPENAI_API_KEY"):
+        print("Skipping example: OPENAI_API_KEY not set.")
+    else:
         try:
-            opts = Options(temperature=70, max_tokens=100) # Example options
-            response = client.QueryText(
-                "You are a poetic assistant.",
-                ["Write a short haiku about clouds."],
-                "gpt-4o-mini", # Example model
-                opts
-            )
-            print("Query Response:", response)
-        except NotImplementedError as e:
-            print(f"Caught expected error: {e}")
+            client = NewOpenAIClient()
+            print("OpenAIClient created successfully.")
 
-        client.Close()
-        print("Client closed.")
+            # Example query
+            try:
+                # Use default temp scale (2.0)
+                opts = Options(temperature=70, max_tokens=100)
+                test_model = "gpt-4o-mini" # Example model
+                response = client.QueryText(
+                    "You are a poetic assistant.",
+                    ["Write a short haiku about clouds."],
+                    test_model,
+                    opts
+                )
+                print(f"\nQuery Response from {test_model}:")
+                print(response)
 
-    except ValueError as e:
-        print(f"Configuration Error: {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+                # Test empty prompt error
+                print("\nTesting empty prompt error:")
+                try:
+                    client.QueryText("System", [], test_model, opts)
+                except ValueError as e:
+                    print(f"Successfully caught expected ValueError: {e}")
+
+            except Exception as e:
+                print(f"An unexpected error occurred during query: {e}")
+
+
+            client.Close()
+            print("\nClient closed.")
+
+        except ValueError as e:
+            print(f"Configuration Error: {e}")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")

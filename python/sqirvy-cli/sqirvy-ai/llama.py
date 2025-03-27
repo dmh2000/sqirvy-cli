@@ -8,7 +8,11 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
 # Assuming client.py is in the same directory
-from .client import Client, Options
+from .client import Client, Options, query_text_langchain, DefaultTempScale
+
+# Constants specific to Llama if needed, otherwise use defaults
+# Llama via OpenAI-compatible API likely uses 0.0-2.0 scale
+LLAMA_TEMP_SCALE = DefaultTempScale
 
 class LlamaClient(Client):
     """
@@ -25,28 +29,29 @@ class LlamaClient(Client):
 
     def QueryText(self, system: str, prompts: list[str], model: str, options: Options) -> str:
         """
-        Sends a text query to the specified Llama model using LangChain.
+        Sends a text query to the specified Llama model using LangChain's OpenAI interface.
 
         Args:
             system: The system prompt.
             prompts: A list of user prompts.
-            model: The specific Llama model identifier to use.
+            model: The specific Llama model identifier to use (must match endpoint expectation).
             options: An Options object containing temperature, max_tokens, etc.
+                     Uses the default temperature scale (2.0) if not specified.
 
         Returns:
             The text response from the AI model.
 
         Raises:
-            NotImplementedError: Placeholder until fully implemented.
+            ValueError: If prompts list is empty or temperature is out of range.
             Exception: Errors from the LangChain API call.
         """
-        # TODO: Implement actual query logic using self.llm
-        #       - Construct messages (SystemMessage, HumanMessage)
-        #       - Handle temperature scaling (Llama often uses 0.0-2.0 like OpenAI)
-        #       - Call self.llm.invoke(...)
-        print(f"Placeholder: Querying Llama model {model} with system prompt and {len(prompts)} user prompts.")
-        print(f"Options: {options}")
-        raise NotImplementedError("LlamaClient.QueryText is not yet implemented")
+        # Ensure the correct temperature scale is used (defaults to 2.0 if None)
+        if options.temperature_scale is None:
+             options.temperature_scale = LLAMA_TEMP_SCALE
+
+        # Delegate to the common LangChain query function
+        return query_text_langchain(self.llm, system, prompts, model, options)
+
 
     def Close(self):
         """
@@ -79,11 +84,10 @@ def NewLlamaClient() -> LlamaClient:
 
     try:
         # Use ChatOpenAI but point it to the Llama endpoint
+        # Model name might be passed during invoke or sometimes needed here depending on provider
         llm = ChatOpenAI(
             base_url=base_url,
             api_key=api_key,
-            # You might need to set other specific parameters depending on the Llama API provider
-            # e.g., model_name might be passed here or during invoke
         )
         print(f"Using Llama Base URL: {base_url}") # Info message
     except Exception as e:
@@ -94,28 +98,44 @@ def NewLlamaClient() -> LlamaClient:
 
 # Example Usage (optional, for testing)
 if __name__ == '__main__':
-    try:
-        # Ensure LLAMA_API_KEY and LLAMA_BASE_URL are set
-        client = NewLlamaClient()
-        print("LlamaClient created successfully.")
-
-        # Example of how QueryText *might* be called (will raise NotImplementedError)
+    # Ensure LLAMA_API_KEY and LLAMA_BASE_URL are set
+    if not os.getenv("LLAMA_API_KEY") or not os.getenv("LLAMA_BASE_URL"):
+        print("Skipping example: LLAMA_API_KEY or LLAMA_BASE_URL not set.")
+    else:
         try:
-            opts = Options(temperature=70, max_tokens=100) # Example options
-            response = client.QueryText(
-                "You are a helpful coding assistant.",
-                ["Explain the difference between a list and a tuple in Python."],
-                "llama3.3-70b", # Example model - ensure this matches what the endpoint expects
-                opts
-            )
-            print("Query Response:", response)
-        except NotImplementedError as e:
-            print(f"Caught expected error: {e}")
+            client = NewLlamaClient()
+            print("LlamaClient created successfully.")
 
-        client.Close()
-        print("Client closed.")
+            # Example query
+            try:
+                # Use default temp scale (2.0)
+                opts = Options(temperature=70, max_tokens=100)
+                # Ensure this model name matches what your Llama endpoint expects
+                test_model = "llama3.3-70b"
+                response = client.QueryText(
+                    "You are a helpful coding assistant.",
+                    ["Explain the difference between a list and a tuple in Python."],
+                    test_model,
+                    opts
+                )
+                print(f"\nQuery Response from {test_model}:")
+                print(response)
 
-    except ValueError as e:
-        print(f"Configuration Error: {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+                # Test empty prompt error
+                print("\nTesting empty prompt error:")
+                try:
+                    client.QueryText("System", [], test_model, opts)
+                except ValueError as e:
+                    print(f"Successfully caught expected ValueError: {e}")
+
+            except Exception as e:
+                print(f"An unexpected error occurred during query: {e}")
+
+
+            client.Close()
+            print("\nClient closed.")
+
+        except ValueError as e:
+            print(f"Configuration Error: {e}")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
