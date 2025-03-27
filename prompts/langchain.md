@@ -41,3 +41,5 @@ Sqirvy-cli is a command line tool to interact with Large Language Models (LLMs).
 - Sqirvy-cli is designed to support terminal command pipelines./
 
 in file python/sqirvy-cli/sqirvy-ai/client.py, create a function named NewClient that takes parameter provider:str as input and returns a client object based on the input string. The  function  is similar to go/pkg/sqirvy/client.go, except using python instead of go. the providers supported include "gemini", "anthropic", "openai", and "llama". you can assume the functions that create the clients will be implemented later.
+
+in file python/sqirvy-cli/sqirvy-ai/anthropic.py, create a function NewAnthropicClient that is similar to the same function in go/pkg/sqirvy/anthropic.go. It will create an instance of interface Client that checks for the anthropic api key from the environment, then creates an insance of the LangChain anthropic object. import the LangChain package for the anthropic llm as weel as any other imports required. 

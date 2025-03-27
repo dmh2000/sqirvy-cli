@@ -4,7 +4,7 @@ Sqirvy-ai: Anthropic Client Implementation
 
 import os
 from langchain_anthropic import ChatAnthropic
-import anthropic
+
 # from langchain_core.messages import HumanMessage, SystemMessage
 # from langchain_core.exceptions import OutputParserException # For potential future use
 
