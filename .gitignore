@@ -7,3 +7,4 @@ REVIEW.*
 pkg/prompts
 tetris
 diffs
+__pycache__

@@ -14,4 +14,3 @@ dependencies = [
 ]
 
 [project.scripts]
-sqirvy-cli = "sqirvy-cli:
