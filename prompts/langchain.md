@@ -39,3 +39,5 @@ Sqirvy-cli is a command line tool to interact with Large Language Models (LLMs).
 - The "code" command is used to send a prompt to the LLM and receive source code in response.
 - The "review" command is used to send a prompt to the LLM and receive a code review in response.
 - Sqirvy-cli is designed to support terminal command pipelines./
+
+in file python/sqirvy-cli/sqirvy-ai/client.py, create a function named NewClient that takes parameter provider:str as input and returns a client object based on the input string. The  function  is similar to go/pkg/sqirvy/client.go, except using python instead of go. the providers supported include "gemini", "anthropic", "openai", and "llama". you can assume the functions that create the clients will be implemented later.
