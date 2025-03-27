@@ -7,7 +7,8 @@ from unittest.mock import patch
 # (e.g., from the 'python/sqirvy-cli' directory after setting PYTHONPATH,
 # or if 'src' is added to sys.path)
 try:
-    from sqirvy_ai.anthropic import NewAnthropicClient, AnthropicClient, ANTHROPIC_TEMP_SCALE
+    # Import from the renamed file
+    from sqirvy_ai.anthropic_client import NewAnthropicClient, AnthropicClient, ANTHROPIC_TEMP_SCALE
     from sqirvy_ai.client import Options, MinTemperature, MaxTemperature
 except ImportError:
     # If running directly from src or tests directory, adjust path
@@ -15,7 +16,8 @@ except ImportError:
     # Assuming the structure is python/sqirvy-cli/src and python/sqirvy-cli/sqirvy_ai
     # Adjust based on your actual structure and how tests are run
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-    from sqirvy_ai.anthropic import NewAnthropicClient, AnthropicClient, ANTHROPIC_TEMP_SCALE
+    # Import from the renamed file
+    from sqirvy_ai.anthropic_client import NewAnthropicClient, AnthropicClient, ANTHROPIC_TEMP_SCALE
     from sqirvy_ai.client import Options, MinTemperature, MaxTemperature
 
 
