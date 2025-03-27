@@ -17,7 +17,7 @@ if __name__ == "__main__":
             try:
                 # Use assumed temp scale for Gemini (1.0)
                 opts = Options(
-                    temperature=70, max_tokens=100, temperature_scale=GEMINI_TEMP_SCALE
+                    temperature=1.0, max_tokens=100, temperature_scale=GEMINI_TEMP_SCALE
                 )
                 response = client.QueryText(
                     "You are a helpful assistant.",

@@ -16,7 +16,7 @@ if __name__ == "__main__":
             # Example query
             try:
                 # Use default temp scale (2.0)
-                opts = Options(temperature=70, max_tokens=100)
+                opts = Options(temperature=1.0, max_tokens=100)
                 response = client.QueryText(
                     "You are a poetic assistant.",
                     ["Write a short haiku about clouds."],
