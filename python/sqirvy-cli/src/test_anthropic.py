@@ -7,16 +7,16 @@ from unittest.mock import patch
 # (e.g., from the 'python/sqirvy-cli' directory after setting PYTHONPATH,
 # or if 'src' is added to sys.path)
 try:
-    from sqirvy_ai.anthropic import NewAnthropicClient, AnthropicClient
-    from sqirvy_ai.client import Options
+    from sqirvy_ai.anthropic import NewAnthropicClient, AnthropicClient, ANTHROPIC_TEMP_SCALE
+    from sqirvy_ai.client import Options, MinTemperature, MaxTemperature
 except ImportError:
     # If running directly from src or tests directory, adjust path
     import sys
     # Assuming the structure is python/sqirvy-cli/src and python/sqirvy-cli/sqirvy_ai
     # Adjust based on your actual structure and how tests are run
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-    from sqirvy_ai.anthropic import NewAnthropicClient, AnthropicClient
-    from sqirvy_ai.client import Options
+    from sqirvy_ai.anthropic import NewAnthropicClient, AnthropicClient, ANTHROPIC_TEMP_SCALE
+    from sqirvy_ai.client import Options, MinTemperature, MaxTemperature
 
 
 # Check if the API key is available in the environment
@@ -35,38 +35,46 @@ class TestAnthropicClient(unittest.TestCase):
         except Exception as e:
              self.fail(f"Unexpected error creating Anthropic client in setUp: {e}")
 
-        # Define common options - adjust model and tokens as needed
-        # Note: Temperature scale is handled differently in Python/Langchain
-        self.model = "claude-3-haiku-20240307" # Use a known, available model
-        # Max tokens might be specific to the model or handled by Langchain defaults
-        # Temperature 0-100 needs scaling to 0.0-1.0 for Anthropic/Langchain
-        self.options = Options(temperature=50, max_tokens=100, temperature_scale=1.0) # Scale 0-100 to 0-1
+        # Use a known, available, and fast model for testing
+        self.model = "claude-3-haiku-20240307"
+        # Use temperature 0 for deterministic output in tests
+        self.options = Options(temperature=0, max_tokens=100, temperature_scale=ANTHROPIC_TEMP_SCALE)
 
     def test_query_text_basic(self):
         """Test QueryText with a basic prompt."""
         prompt = ["Say 'Hello, World!'"]
-        # Currently expects NotImplementedError until QueryText is implemented
-        with self.assertRaisesRegex(NotImplementedError, "AnthropicClient.QueryText is not yet implemented"):
+        try:
             response = self.client.QueryText(ASSISTANT_PROMPT, prompt, self.model, self.options)
-            # Once implemented, assertions would change:
-            # self.assertIsInstance(response, str)
-            # self.assertGreater(len(response), 0, "QueryText returned an empty response")
-            # self.assertIn("Hello", response, "Response did not contain expected content")
+            self.assertIsInstance(response, str)
+            self.assertGreater(len(response), 0, "QueryText returned an empty response")
+            # Anthropic models might add conversational filler, so check for contains
+            self.assertIn("Hello, World!", response, "Response did not contain expected content")
+        except Exception as e:
+            self.fail(f"QueryText failed unexpectedly: {e}")
 
     def test_query_text_empty_prompt_list(self):
         """Test QueryText with an empty list of prompts."""
         prompt = []
-        # Depending on implementation, this might raise ValueError or similar before API call,
-        # or NotImplementedError if the check happens after the placeholder.
-        # For now, assume it hits the placeholder.
-        with self.assertRaisesRegex(NotImplementedError, "AnthropicClient.QueryText is not yet implemented"):
-             response = self.client.QueryText(ASSISTANT_PROMPT, prompt, self.model, self.options)
-             # If QueryText were implemented, it should ideally raise a ValueError for empty prompts:
-             # with self.assertRaises(ValueError):
-             #     self.client.QueryText(ASSISTANT_PROMPT, prompt, self.model, self.options)
+        # Expect a ValueError because the prompts list is empty
+        with self.assertRaisesRegex(ValueError, "Prompts list cannot be empty"):
+             self.client.QueryText(ASSISTANT_PROMPT, prompt, self.model, self.options)
 
-    # Add more tests here as QueryText functionality is built out
-    # e.g., test different temperatures, max_tokens, models, error handling from API
+    def test_query_text_invalid_temperature_low(self):
+        """Test QueryText with temperature below minimum."""
+        invalid_temp = MinTemperature - 10
+        options_invalid = Options(temperature=invalid_temp, temperature_scale=ANTHROPIC_TEMP_SCALE)
+        with self.assertRaisesRegex(ValueError, "Temperature must be between"):
+            self.client.QueryText(ASSISTANT_PROMPT, ["Test"], self.model, options_invalid)
+
+    def test_query_text_invalid_temperature_high(self):
+        """Test QueryText with temperature above maximum."""
+        invalid_temp = MaxTemperature + 10
+        options_invalid = Options(temperature=invalid_temp, temperature_scale=ANTHROPIC_TEMP_SCALE)
+        with self.assertRaisesRegex(ValueError, "Temperature must be between"):
+            self.client.QueryText(ASSISTANT_PROMPT, ["Test"], self.model, options_invalid)
+
+    # Add more tests here as needed
+    # e.g., test different temperatures, max_tokens, specific model behaviors, error handling from API
 
     def tearDown(self):
         """Clean up after tests."""
