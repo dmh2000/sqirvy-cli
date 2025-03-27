@@ -27,7 +27,7 @@ class LlamaClient(Client):
         """
         self.llm = llm
 
-    def QueryText(self, system: str, prompts: list[str], model: str, options: Options) -> str:
+    def QueryText(self, system: str, prompts: list[str], options: Options) -> str:
         """
         Sends a text query to the specified Llama model using LangChain's OpenAI interface.
 
@@ -50,7 +50,7 @@ class LlamaClient(Client):
              options.temperature_scale = LLAMA_TEMP_SCALE
 
         # Delegate to the common LangChain query function
-        return query_text_langchain(self.llm, system, prompts, model, options)
+        return query_text_langchain(self.llm, system, prompts, options)
 
 
     def Close(self):
@@ -60,7 +60,7 @@ class LlamaClient(Client):
         # The LangChain client doesn't typically require explicit closing.
         pass
 
-def NewLlamaClient() -> LlamaClient:
+def NewLlamaClient(model: str) -> LlamaClient:
     """
     Factory function to create a new LlamaClient.
 
@@ -88,6 +88,7 @@ def NewLlamaClient() -> LlamaClient:
         llm = ChatOpenAI(
             base_url=base_url,
             api_key=api_key,
+            model=model,
         )
         print(f"Using Llama Base URL: {base_url}") # Info message
     except Exception as e:
@@ -96,46 +97,4 @@ def NewLlamaClient() -> LlamaClient:
 
     return LlamaClient(llm)
 
-# Example Usage (optional, for testing)
-if __name__ == '__main__':
-    # Ensure LLAMA_API_KEY and LLAMA_BASE_URL are set
-    if not os.getenv("LLAMA_API_KEY") or not os.getenv("LLAMA_BASE_URL"):
-        print("Skipping example: LLAMA_API_KEY or LLAMA_BASE_URL not set.")
-    else:
-        try:
-            client = NewLlamaClient()
-            print("LlamaClient created successfully.")
-
-            # Example query
-            try:
-                # Use default temp scale (2.0)
-                opts = Options(temperature=70, max_tokens=100)
-                # Ensure this model name matches what your Llama endpoint expects
-                test_model = "llama3.3-70b"
-                response = client.QueryText(
-                    "You are a helpful coding assistant.",
-                    ["Explain the difference between a list and a tuple in Python."],
-                    test_model,
-                    opts
-                )
-                print(f"\nQuery Response from {test_model}:")
-                print(response)
-
-                # Test empty prompt error
-                print("\nTesting empty prompt error:")
-                try:
-                    client.QueryText("System", [], test_model, opts)
-                except ValueError as e:
-                    print(f"Successfully caught expected ValueError: {e}")
-
-            except Exception as e:
-                print(f"An unexpected error occurred during query: {e}")
-
-
-            client.Close()
-            print("\nClient closed.")
-
-        except ValueError as e:
-            print(f"Configuration Error: {e}")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+#

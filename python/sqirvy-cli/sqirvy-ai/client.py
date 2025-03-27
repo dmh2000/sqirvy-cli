@@ -5,6 +5,9 @@ from typing import Dict, List, Optional, Union # Added Optional, Union, Dict, Li
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from .models import MODEL_TO_PROVIDER
+
+
 # Constants matching Go implementation
 MaxTokensDefault = 4096
 MinTemperature = 0.0
@@ -35,7 +38,6 @@ def query_text_langchain(
     llm: BaseChatModel,
     system: str,
     prompts: List[str],
-    model: str,
     options: Options
 ) -> str:
     """
@@ -74,14 +76,14 @@ def query_text_langchain(
 
     # Prepare LangChain options
     langchain_options = {
-        "model": model,
-        "temperature": scaled_temperature,
+        # model": model,
+        # "temperature": scaled_temperature,
     }
-    # Add max_tokens if provided (LangChain uses 'max_tokens' generally,
-    # though some integrations might have specific names like 'max_tokens_to_sample')
-    if options.max_tokens > 0:
-        # Use 'max_tokens' as the common parameter name
-        langchain_options["max_tokens"] = int(options.max_tokens)
+    # # Add max_tokens if provided (LangChain uses 'max_tokens' generally,
+    # # though some integrations might have specific names like 'max_tokens_to_sample')
+    # if options.max_tokens > 0:
+    #     # Use 'max_tokens' as the common parameter name
+    #     langchain_options["max_tokens"] = int(options.max_tokens)
 
     try:
         # Make the API call using the passed llm object
@@ -108,7 +110,7 @@ class Client(ABC):
     """
 
     @abstractmethod
-    def QueryText(self, system: str, prompts: List[str], model: str, options: Options) -> str:
+    def QueryText(self, system: str, prompts: List[str], options: Options) -> str:
         """
         Sends a text query to the specified model and returns the response.
 
@@ -141,7 +143,7 @@ class Client(ABC):
 
 # --- Factory Function ---
 
-def NewClient(provider: str) -> Optional[Client]:
+def NewClient(model: str) -> Optional[Client]:
     """
     Factory function to create a new AI client based on the specified provider.
 
@@ -155,24 +157,25 @@ def NewClient(provider: str) -> Optional[Client]:
         ValueError: If the specified provider is not supported.
         Exception: If client creation fails for other reasons (e.g., missing API key).
     """
+    provider = MODEL_TO_PROVIDER[model]
     provider = provider.lower() # Ensure case-insensitivity
 
     # Import functions here to avoid potential circular dependencies at module level
     # and ensure they are defined before being called.
     try:
         if provider == "gemini":
-            from .gemini import NewGeminiClient # Assuming gemini.py exists
-            return NewGeminiClient()
+            from .gemini_client import NewGeminiClient # Assuming gemini.py exists
+            return NewGeminiClient(model)
         elif provider == "anthropic":
             # Import from the renamed file
             from .anthropic_client import NewAnthropicClient
-            return NewAnthropicClient()
+            return NewAnthropicClient(model)
         elif provider == "openai":
-            from .openai import NewOpenAIClient # Assuming openai.py exists
-            return NewOpenAIClient()
+            from .openai_client import NewOpenAIClient # Assuming openai.py exists
+            return NewOpenAIClient(model)
         elif provider == "llama":
-            from .llama import NewLlamaClient # Assuming llama.py exists
-            return NewLlamaClient()
+            from .llama_client import NewLlamaClient # Assuming llama.py exists
+            return NewLlamaClient(model)
         # Add other providers like "deepseek" here if needed
         # elif provider == "deepseek":
         #     from .deepseek import NewDeepSeekClient # Assuming deepseek.py exists
@@ -186,81 +189,4 @@ def NewClient(provider: str) -> Optional[Client]:
         # Catch errors during client instantiation (e.g., missing keys handled in specific New*Client funcs)
         # Re-raise the specific error for clarity
         raise e
-
-
-# Example Usage (optional, for testing)
-if __name__ == '__main__':
-    import os # Import os here for the example usage block
-    # Note: Set relevant API keys in environment variables before running
-    supported_providers = ["anthropic"] # Add others like "gemini", "openai", "llama" as implemented
-    unsupported_provider = "unknown_provider"
-
-    print("--- Testing Client Creation ---")
-    for prov in supported_providers:
-        # Check for API key before attempting creation in example
-        key_needed = f"{prov.upper()}_API_KEY"
-        if not os.getenv(key_needed):
-             print(f"Skipping {prov} client creation test: {key_needed} not set.")
-             continue
-
-        try:
-            print(f"Attempting to create client for: {prov}")
-            # Ensure the corresponding New*Client function exists and API keys are set
-            client_instance = NewClient(prov)
-            if client_instance:
-                print(f"Successfully created client for {prov}: {type(client_instance)}")
-                # Placeholder for using the client
-                try:
-                    # Use temperature 0 for deterministic output in example
-                    opts = Options(temperature=0, max_tokens=50)
-                    # Use a known model for the provider (adjust if needed)
-                    test_model = "claude-3-haiku-20240307" if prov == "anthropic" else "default-model"
-                    response = client_instance.QueryText("System prompt", ["Say 'Test'"], test_model, opts)
-                    print(f"  Query Response from {test_model}: {response[:100]}...") # Print snippet
-                except NotImplementedError:
-                     print(f"  QueryText for {prov} not implemented yet.")
-                except ValueError as ve:
-                     print(f"  Caught ValueError during query test: {ve}")
-                except Exception as qe:
-                     print(f"  Caught unexpected error during query test: {qe}")
-
-                client_instance.Close()
-                print(f"  Client for {prov} closed.")
-            else:
-                print(f"Failed to create client for {prov} (returned None)")
-        except (ValueError, ImportError, Exception) as e:
-            print(f"Error creating client for {prov}: {e}")
-
-    print(f"\n--- Testing Unsupported Provider ({unsupported_provider}) ---")
-    try:
-        unsupported_client = NewClient(unsupported_provider)
-    except ValueError as e:
-        print(f"Successfully caught expected error for unsupported provider: {e}")
-    except Exception as e:
-        print(f"Caught unexpected error for unsupported provider: {e}")
-
-    print("\n--- Testing Missing API Key (Example: Anthropic) ---")
-    # Temporarily unset API key (if it was set) to test error handling
-    original_key = os.environ.get("ANTHROPIC_API_KEY")
-    key_was_set = False
-    if original_key:
-        del os.environ["ANTHROPIC_API_KEY"]
-        key_was_set = True
-        print("Temporarily unset ANTHROPIC_API_KEY for testing.")
-
-    try:
-        # Only run this test if the key was actually set initially
-        if key_was_set:
-            client_instance = NewClient("anthropic")
-        else:
-            print("Skipping missing key test for Anthropic as key was not set initially.")
-    except ValueError as e:
-         print(f"Successfully caught expected ValueError for missing API key: {e}")
-    except Exception as e:
-         print(f"Caught unexpected error when testing missing API key: {e}")
-    finally:
-        # Restore the key if it was originally set
-        if key_was_set:
-            os.environ["ANTHROPIC_API_KEY"] = original_key
-            print("Restored ANTHROPIC_API_KEY.")
 

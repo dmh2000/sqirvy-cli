@@ -28,7 +28,7 @@ class GeminiClient(Client):
         """
         self.llm = llm
 
-    def QueryText(self, system: str, prompts: list[str], model: str, options: Options) -> str:
+    def QueryText(self, system: str, prompts: list[str], options: Options) -> str:
         """
         Sends a text query to the specified Gemini model using LangChain.
 
@@ -58,7 +58,7 @@ class GeminiClient(Client):
         # The common helper function includes it, but its effect depends on the underlying implementation.
 
         # Delegate to the common LangChain query function
-        return query_text_langchain(self.llm, system, prompts, model, options)
+        return query_text_langchain(self.llm, system, prompts, options)
 
 
     def Close(self):
@@ -68,7 +68,7 @@ class GeminiClient(Client):
         # The LangChain client doesn't typically require explicit closing.
         pass
 
-def NewGeminiClient() -> GeminiClient:
+def NewGeminiClient(model: str) -> GeminiClient:
     """
     Factory function to create a new GeminiClient.
 
@@ -89,52 +89,9 @@ def NewGeminiClient() -> GeminiClient:
     try:
         # Pass the API key explicitly. Model is specified during the query.
         # Langchain's ChatGoogleGenerativeAI handles API key via constructor.
-        llm = ChatGoogleGenerativeAI(google_api_key=api_key)
+        llm = ChatGoogleGenerativeAI(model=model,google_api_key=api_key)
     except Exception as e:
         # Catch potential initialization errors from LangChain
         raise Exception(f"Failed to create LangChain Gemini client: {e}") from e
 
     return GeminiClient(llm)
-
-# Example Usage (optional, for testing)
-if __name__ == '__main__':
-    # Ensure GEMINI_API_KEY is set in your environment for this to work
-    if not os.getenv("GEMINI_API_KEY"):
-        print("Skipping example: GEMINI_API_KEY not set.")
-    else:
-        try:
-            client = NewGeminiClient()
-            print("GeminiClient created successfully.")
-
-            # Example query
-            try:
-                # Use assumed temp scale for Gemini (1.0)
-                opts = Options(temperature=70, max_tokens=100, temperature_scale=GEMINI_TEMP_SCALE)
-                test_model = "gemini-1.5-flash" # Example model
-                response = client.QueryText(
-                    "You are a helpful assistant.",
-                    ["What is the weather like today?"],
-                    test_model,
-                    opts
-                )
-                print(f"\nQuery Response from {test_model}:")
-                print(response)
-
-                # Test empty prompt error
-                print("\nTesting empty prompt error:")
-                try:
-                    client.QueryText("System", [], test_model, opts)
-                except ValueError as e:
-                    print(f"Successfully caught expected ValueError: {e}")
-
-            except Exception as e:
-                print(f"An unexpected error occurred during query: {e}")
-
-
-            client.Close()
-            print("\nClient closed.")
-
-        except ValueError as e:
-            print(f"Configuration Error: {e}")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")

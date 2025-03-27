@@ -27,7 +27,7 @@ class AnthropicClient(Client):
         """
         self.llm = llm
 
-    def QueryText(self, system: str, prompts: list[str], model: str, options: Options) -> str:
+    def QueryText(self, system: str, prompts: list[str], options: Options) -> str:
         """
         Sends a text query to the specified Anthropic model using LangChain.
 
@@ -55,7 +55,7 @@ class AnthropicClient(Client):
              options.temperature_scale = ANTHROPIC_TEMP_SCALE
 
         # Delegate to the common LangChain query function
-        return query_text_langchain(self.llm, system, prompts, model, options)
+        return query_text_langchain(self.llm, system, prompts,  options)
 
 
     def Close(self):
@@ -65,7 +65,7 @@ class AnthropicClient(Client):
         # The LangChain client doesn't typically require explicit closing.
         pass
 
-def NewAnthropicClient() -> AnthropicClient:
+def NewAnthropicClient(model: str) -> AnthropicClient:
     """
     Factory function to create a new AnthropicClient.
 
@@ -87,53 +87,10 @@ def NewAnthropicClient() -> AnthropicClient:
         # LangChain's ChatAnthropic automatically picks up the API key
         # from the environment variable if not explicitly passed.
         # We don't specify the model here; it's passed during QueryText.
-        llm = ChatAnthropic()
+        llm = ChatAnthropic(model=model, anthropic_api_key=api_key)
     except Exception as e:
         # Catch potential initialization errors from LangChain
         raise Exception(f"Failed to create LangChain Anthropic client: {e}") from e
 
     return AnthropicClient(llm)
-
-# Example Usage (optional, for testing)
-if __name__ == '__main__':
-    # Ensure ANTHROPIC_API_KEY is set in your environment for this to work
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        print("Skipping example: ANTHROPIC_API_KEY not set.")
-    else:
-        try:
-            client = NewAnthropicClient()
-            print("AnthropicClient created successfully.")
-
-            # Example query
-            try:
-                # Use temperature 0 for deterministic output in example
-                # Explicitly set the correct scale for clarity, though QueryText handles it
-                opts = Options(temperature=0, max_tokens=50, temperature_scale=ANTHROPIC_TEMP_SCALE)
-                test_model = "claude-3-haiku-20240307" # Use a fast model for testing
-                response = client.QueryText(
-                    "You are a helpful assistant.",
-                    ["Say 'Hello, World!'"],
-                    test_model,
-                    opts
-                )
-                print(f"\nQuery Response from {test_model}:")
-                print(response)
-
-                # Test empty prompt error
-                print("\nTesting empty prompt error:")
-                try:
-                    client.QueryText("System", [], test_model, opts)
-                except ValueError as e:
-                    print(f"Successfully caught expected ValueError: {e}")
-
-            except Exception as e:
-                print(f"An unexpected error occurred during query: {e}")
-
-            client.Close()
-            print("\nClient closed.")
-
-        except ValueError as e:
-            print(f"Configuration Error: {e}")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
 

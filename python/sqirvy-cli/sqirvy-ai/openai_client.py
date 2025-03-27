@@ -25,7 +25,7 @@ class OpenAIClient(Client):
         """
         self.llm = llm
 
-    def QueryText(self, system: str, prompts: list[str], model: str, options: Options) -> str:
+    def QueryText(self, system: str, prompts: list[str], options: Options) -> str:
         """
         Sends a text query to the specified OpenAI model using LangChain.
 
@@ -48,7 +48,7 @@ class OpenAIClient(Client):
              options.temperature_scale = OPENAI_TEMP_SCALE
 
         # Delegate to the common LangChain query function
-        return query_text_langchain(self.llm, system, prompts, model, options)
+        return query_text_langchain(self.llm, system, prompts, options)
 
 
     def Close(self):
@@ -58,7 +58,7 @@ class OpenAIClient(Client):
         # The LangChain client doesn't typically require explicit closing.
         pass
 
-def NewOpenAIClient() -> OpenAIClient:
+def NewOpenAIClient(model: str) -> OpenAIClient:
     """
     Factory function to create a new OpenAIClient.
 
@@ -79,7 +79,7 @@ def NewOpenAIClient() -> OpenAIClient:
     base_url = os.getenv("OPENAI_BASE_URL") # Optional base URL
 
     try:
-        init_args = {"api_key": api_key}
+        init_args = {"api_key": api_key, "model": model}
         if base_url:
             init_args["base_url"] = base_url
             print(f"Using OpenAI Base URL: {base_url}") # Info message
@@ -92,46 +92,3 @@ def NewOpenAIClient() -> OpenAIClient:
         raise Exception(f"Failed to create LangChain OpenAI client: {e}") from e
 
     return OpenAIClient(llm)
-
-# Example Usage (optional, for testing)
-if __name__ == '__main__':
-    # Ensure OPENAI_API_KEY (and optionally OPENAI_BASE_URL) is set
-    if not os.getenv("OPENAI_API_KEY"):
-        print("Skipping example: OPENAI_API_KEY not set.")
-    else:
-        try:
-            client = NewOpenAIClient()
-            print("OpenAIClient created successfully.")
-
-            # Example query
-            try:
-                # Use default temp scale (2.0)
-                opts = Options(temperature=70, max_tokens=100)
-                test_model = "gpt-4o-mini" # Example model
-                response = client.QueryText(
-                    "You are a poetic assistant.",
-                    ["Write a short haiku about clouds."],
-                    test_model,
-                    opts
-                )
-                print(f"\nQuery Response from {test_model}:")
-                print(response)
-
-                # Test empty prompt error
-                print("\nTesting empty prompt error:")
-                try:
-                    client.QueryText("System", [], test_model, opts)
-                except ValueError as e:
-                    print(f"Successfully caught expected ValueError: {e}")
-
-            except Exception as e:
-                print(f"An unexpected error occurred during query: {e}")
-
-
-            client.Close()
-            print("\nClient closed.")
-
-        except ValueError as e:
-            print(f"Configuration Error: {e}")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
