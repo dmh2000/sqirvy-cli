@@ -1,5 +1,5 @@
 """
-Sqirvy-ai: Anthropic Client Implementation
+sqirvy: Anthropic Client Implementation
 """
 
 import os
@@ -9,15 +9,23 @@ from langchain_anthropic import ChatAnthropic
 # from langchain_core.exceptions import OutputParserException # For potential future use
 
 # Assuming client.py is in the same directory
-from .client import Client, Options, MinTemperature, MaxTemperature, query_text_langchain
+from .client import (
+    Client,
+    Options,
+    MinTemperature,
+    MaxTemperature,
+    query_text_langchain,
+)
 
 # Constants matching Go implementation
-ANTHROPIC_TEMP_SCALE = 1.0 # Anthropic uses 0.0-1.0
+ANTHROPIC_TEMP_SCALE = 1.0  # Anthropic uses 0.0-1.0
+
 
 class AnthropicClient(Client):
     """
     Client implementation for Anthropic's API using LangChain.
     """
+
     def __init__(self, llm: ChatAnthropic):
         """
         Initializes the AnthropicClient.
@@ -48,15 +56,16 @@ class AnthropicClient(Client):
         """
         # Ensure the correct temperature scale is used for Anthropic
         if options.temperature_scale is None:
-             options.temperature_scale = ANTHROPIC_TEMP_SCALE
+            options.temperature_scale = ANTHROPIC_TEMP_SCALE
         elif options.temperature_scale != ANTHROPIC_TEMP_SCALE:
-             # Optionally warn or raise if a different scale is explicitly provided
-             print(f"Warning: Overriding provided temperature_scale ({options.temperature_scale}) with Anthropic's required scale ({ANTHROPIC_TEMP_SCALE})")
-             options.temperature_scale = ANTHROPIC_TEMP_SCALE
+            # Optionally warn or raise if a different scale is explicitly provided
+            print(
+                f"Warning: Overriding provided temperature_scale ({options.temperature_scale}) with Anthropic's required scale ({ANTHROPIC_TEMP_SCALE})"
+            )
+            options.temperature_scale = ANTHROPIC_TEMP_SCALE
 
         # Delegate to the common LangChain query function
-        return query_text_langchain(self.llm, system, prompts,  options)
-
+        return query_text_langchain(self.llm, system, prompts, options)
 
     def Close(self):
         """
@@ -64,6 +73,7 @@ class AnthropicClient(Client):
         """
         # The LangChain client doesn't typically require explicit closing.
         pass
+
 
 def NewAnthropicClient(model: str) -> AnthropicClient:
     """
@@ -82,15 +92,17 @@ def NewAnthropicClient(model: str) -> AnthropicClient:
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         raise ValueError("ANTHROPIC_API_KEY environment variable not set")
+    base_url = os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
+    if not base_url:
+        raise ValueError("ANTHROPIC_BASE_URL environment variable not set")
 
     try:
         # LangChain's ChatAnthropic automatically picks up the API key
         # from the environment variable if not explicitly passed.
         # We don't specify the model here; it's passed during QueryText.
-        llm = ChatAnthropic(model=model, anthropic_api_key=api_key)
+        llm = ChatAnthropic(model=model, api_key=api_key, base_url=base_url)
     except Exception as e:
         # Catch potential initialization errors from LangChain
         raise Exception(f"Failed to create LangChain Anthropic client: {e}") from e
 
     return AnthropicClient(llm)
-

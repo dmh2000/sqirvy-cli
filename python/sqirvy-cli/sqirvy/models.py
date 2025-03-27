@@ -1,5 +1,5 @@
 """
-Sqirvy-ai: Model Management
+sqirvy: Model Management
 
 Contains model-to-provider mappings, token limits, and utility functions
 for working with different AI models across supported providers.

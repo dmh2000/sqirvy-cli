@@ -1,5 +1,5 @@
 """
-Sqirvy-ai: OpenAI Client Implementation
+sqirvy: OpenAI Client Implementation
 """
 
 import os

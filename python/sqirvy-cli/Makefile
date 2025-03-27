@@ -1,8 +1,8 @@
 .PHONY: test
 
 test:
-	python -m sqirvy-ai.anthropic_test
-	#python -m sqirvy-ai.gemini_test
-	#python -m sqirvy-ai.openai_test
-	#python -m sqirvy-ai.llama_test
+	python  -m sqirvy.anthropic_test
+	#python -m sqirvy.gemini_test
+	#python -m sqirvy.openai_test
+	#python -m sqirvy.llama_test
 

@@ -1,5 +1,5 @@
 """
-Sqirvy-ai: Llama Client Implementation (using OpenAI compatible API)
+sqirvy: Llama Client Implementation (using OpenAI compatible API)
 """
 
 import os

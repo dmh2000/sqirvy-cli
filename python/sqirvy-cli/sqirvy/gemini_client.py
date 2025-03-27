@@ -1,5 +1,5 @@
 """
-Sqirvy-ai: Google Gemini Client Implementation
+sqirvy: Google Gemini Client Implementation
 """
 
 import os
@@ -13,12 +13,14 @@ from .client import Client, Options, query_text_langchain
 # Gemini's native temperature scale is often 0.0-1.0 or 0.0-2.0.
 # Langchain's integration might handle this, but we can specify if needed.
 # Let's assume Langchain handles it correctly for now, or use 1.0/2.0 if issues arise.
-GEMINI_TEMP_SCALE = 1.0 # Assuming Langchain expects 0.0-1.0 for Gemini
+GEMINI_TEMP_SCALE = 1.0  # Assuming Langchain expects 0.0-1.0 for Gemini
+
 
 class GeminiClient(Client):
     """
     Client implementation for Google's Gemini API using LangChain.
     """
+
     def __init__(self, llm: ChatGoogleGenerativeAI):
         """
         Initializes the GeminiClient.
@@ -49,10 +51,12 @@ class GeminiClient(Client):
         """
         # Ensure the correct temperature scale is used for Gemini if needed
         if options.temperature_scale is None:
-             options.temperature_scale = GEMINI_TEMP_SCALE
+            options.temperature_scale = GEMINI_TEMP_SCALE
         elif options.temperature_scale != GEMINI_TEMP_SCALE:
-             print(f"Warning: Using provided temperature_scale ({options.temperature_scale}) for Gemini, expected scale might be {GEMINI_TEMP_SCALE}")
-             # Allow override but warn
+            print(
+                f"Warning: Using provided temperature_scale ({options.temperature_scale}) for Gemini, expected scale might be {GEMINI_TEMP_SCALE}"
+            )
+            # Allow override but warn
 
         # Note: System prompt handling varies with Gemini models and Langchain versions.
         # The common helper function includes it, but its effect depends on the underlying implementation.
@@ -60,13 +64,13 @@ class GeminiClient(Client):
         # Delegate to the common LangChain query function
         return query_text_langchain(self.llm, system, prompts, options)
 
-
     def Close(self):
         """
         Closes resources. For LangChain's Gemini client, this is usually a no-op.
         """
         # The LangChain client doesn't typically require explicit closing.
         pass
+
 
 def NewGeminiClient(model: str) -> GeminiClient:
     """
@@ -89,7 +93,7 @@ def NewGeminiClient(model: str) -> GeminiClient:
     try:
         # Pass the API key explicitly. Model is specified during the query.
         # Langchain's ChatGoogleGenerativeAI handles API key via constructor.
-        llm = ChatGoogleGenerativeAI(model=model,google_api_key=api_key)
+        llm = ChatGoogleGenerativeAI(model=model, google_api_key=api_key)
     except Exception as e:
         # Catch potential initialization errors from LangChain
         raise Exception(f"Failed to create LangChain Gemini client: {e}") from e
