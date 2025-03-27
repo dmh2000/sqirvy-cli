@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Union # Added Optional, Union, Dict, List
+from typing import Dict, List, Optional, Union  # Added Optional, Union, Dict, List
 
 # Import Langchain components needed for the helper function
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -10,9 +10,10 @@ from .models import MODEL_TO_PROVIDER
 
 # Constants matching Go implementation
 MaxTokensDefault = 4096
-MinTemperature = 0.0
-MaxTemperature = 100.0
-DefaultTempScale = 2.0 # Default scaling factor (like OpenAI, Llama)
+MinTemperature = 0.01
+MaxTemperature = 1.0
+DefaultTempScale = 2.0  # Default scaling factor (like OpenAI, Llama)
+
 
 class Options:
     """
@@ -23,10 +24,22 @@ class Options:
         max_tokens: Maximum response tokens. Defaults to MaxTokensDefault if None or 0.
         temperature_scale: Provider-specific scaling factor for temperature (e.g., 1.0 for Anthropic, 2.0 for OpenAI). Defaults to DefaultTempScale if None.
     """
-    def __init__(self, temperature: Optional[float] = None, max_tokens: Optional[int] = None, temperature_scale: Optional[float] = None):
+
+    def __init__(
+        self,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        temperature_scale: Optional[float] = None,
+    ):
         self.temperature = temperature if temperature is not None else MinTemperature
-        self.max_tokens = max_tokens if max_tokens is not None and max_tokens > 0 else MaxTokensDefault
-        self.temperature_scale = temperature_scale if temperature_scale is not None else DefaultTempScale
+        self.max_tokens = (
+            max_tokens
+            if max_tokens is not None and max_tokens > 0
+            else MaxTokensDefault
+        )
+        self.temperature_scale = (
+            temperature_scale if temperature_scale is not None else DefaultTempScale
+        )
 
     def __repr__(self):
         return f"Options(temperature={self.temperature}, max_tokens={self.max_tokens}, temperature_scale={self.temperature_scale})"
@@ -34,11 +47,9 @@ class Options:
 
 # --- LangChain Query Helper Function ---
 
+
 def query_text_langchain(
-    llm: BaseChatModel,
-    system: str,
-    prompts: List[str],
-    options: Options
+    llm: BaseChatModel, system: str, prompts: List[str], options: Options
 ) -> str:
     """
     Helper function to execute a text query using a LangChain chat model.
@@ -63,7 +74,9 @@ def query_text_langchain(
     # Validate and scale temperature
     temp = options.temperature
     if not MinTemperature <= temp <= MaxTemperature:
-         raise ValueError(f"Temperature must be between {MinTemperature} and {MaxTemperature}, got {temp}")
+        raise ValueError(
+            f"Temperature must be between {MinTemperature} and {MaxTemperature}, got {temp}"
+        )
 
     # Use the provided scale, defaulting if necessary
     temp_scale = options.temperature_scale
@@ -77,7 +90,7 @@ def query_text_langchain(
     # Prepare LangChain options
     langchain_options = {
         # model": model,
-        # "temperature": scaled_temperature,
+        "temperature": 0.5,
     }
     # # Add max_tokens if provided (LangChain uses 'max_tokens' generally,
     # # though some integrations might have specific names like 'max_tokens_to_sample')
@@ -90,7 +103,7 @@ def query_text_langchain(
         response = llm.invoke(messages, **langchain_options)
 
         # Extract content from response
-        if hasattr(response, 'content'):
+        if hasattr(response, "content"):
             return response.content
         else:
             # Handle unexpected response structure
@@ -102,6 +115,7 @@ def query_text_langchain(
 
 
 # --- Client Interface ---
+
 
 class Client(ABC):
     """
@@ -141,7 +155,9 @@ class Client(ABC):
         """
         pass
 
+
 # --- Factory Function ---
+
 
 def NewClient(model: str) -> Optional[Client]:
     """
@@ -158,23 +174,27 @@ def NewClient(model: str) -> Optional[Client]:
         Exception: If client creation fails for other reasons (e.g., missing API key).
     """
     provider = MODEL_TO_PROVIDER[model]
-    provider = provider.lower() # Ensure case-insensitivity
+    provider = provider.lower()  # Ensure case-insensitivity
 
     # Import functions here to avoid potential circular dependencies at module level
     # and ensure they are defined before being called.
     try:
         if provider == "gemini":
-            from .gemini_client import NewGeminiClient # Assuming gemini.py exists
+            from .gemini_client import NewGeminiClient  # Assuming gemini.py exists
+
             return NewGeminiClient(model)
         elif provider == "anthropic":
             # Import from the renamed file
             from .anthropic_client import NewAnthropicClient
+
             return NewAnthropicClient(model)
         elif provider == "openai":
-            from .openai_client import NewOpenAIClient # Assuming openai.py exists
+            from .openai_client import NewOpenAIClient  # Assuming openai.py exists
+
             return NewOpenAIClient(model)
         elif provider == "llama":
-            from .llama_client import NewLlamaClient # Assuming llama.py exists
+            from .llama_client import NewLlamaClient  # Assuming llama.py exists
+
             return NewLlamaClient(model)
         # Add other providers like "deepseek" here if needed
         # elif provider == "deepseek":
@@ -184,9 +204,10 @@ def NewClient(model: str) -> Optional[Client]:
             raise ValueError(f"Unsupported provider: {provider}")
     except ImportError as e:
         # Handle cases where the specific client module might be missing or has issues
-        raise ImportError(f"Could not import client module for provider '{provider}': {e}") from e
+        raise ImportError(
+            f"Could not import client module for provider '{provider}': {e}"
+        ) from e
     except Exception as e:
         # Catch errors during client instantiation (e.g., missing keys handled in specific New*Client funcs)
         # Re-raise the specific error for clarity
         raise e
-

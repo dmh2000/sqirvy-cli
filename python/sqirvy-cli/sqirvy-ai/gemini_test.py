@@ -1,28 +1,28 @@
-from ..llama_client import NewLlamaClient, Options
+from .gemini_client import NewGeminiClient, Options, GEMINI_TEMP_SCALE
 import os
-
-
 
 # Example Usage (optional, for testing)
 if __name__ == "__main__":
-    # Ensure LLAMA_API_KEY and LLAMA_BASE_URL are set
-    if not os.getenv("LLAMA_API_KEY") or not os.getenv("LLAMA_BASE_URL"):
-        print("Skipping example: LLAMA_API_KEY or LLAMA_BASE_URL not set.")
+
+    # Ensure GEMINI_API_KEY is set in your environment for this to work
+    if not os.getenv("GEMINI_API_KEY"):
+        print("Skipping example: GEMINI_API_KEY not set.")
     else:
         try:
-            test_model = "llama3.3-70b"
-            client = NewLlamaClient(test_model)
-            print("LlamaClient created successfully.")
+            test_model = "gemini-1.5-flash"  # Example model
+            client = NewGeminiClient(test_model)
+            print("GeminiClient created successfully.")
 
             # Example query
             try:
-                # Use default temp scale (2.0)
-                opts = Options(temperature=70, max_tokens=100)
-                # Ensure this model name matches what your Llama endpoint expects
+                # Use assumed temp scale for Gemini (1.0)
+                opts = Options(
+                    temperature=70, max_tokens=100, temperature_scale=GEMINI_TEMP_SCALE
+                )
                 response = client.QueryText(
-                    "You are a helpful coding assistant.",
-                    ["Explain the difference between a list and a tuple in Python."],
-                    opts
+                    "You are a helpful assistant.",
+                    ["What is the weather like today?"],
+                    opts,
                 )
                 print(f"\nQuery Response from {test_model}:")
                 print(response)
@@ -36,7 +36,6 @@ if __name__ == "__main__":
 
             except Exception as e:
                 print(f"An unexpected error occurred during query: {e}")
-
 
             client.Close()
             print("\nClient closed.")

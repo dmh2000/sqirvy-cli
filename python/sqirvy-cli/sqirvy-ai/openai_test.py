@@ -1,26 +1,26 @@
-from ..gemini_client import NewGeminiClient, Options, GEMINI_TEMP_SCALE
+from .openai_client import NewOpenAIClient, Options
 import os
+
 
 # Example Usage (optional, for testing)
 if __name__ == "__main__":
-
-    # Ensure GEMINI_API_KEY is set in your environment for this to work
-    if not os.getenv("GEMINI_API_KEY"):
-        print("Skipping example: GEMINI_API_KEY not set.")
+    # Ensure OPENAI_API_KEY (and optionally OPENAI_BASE_URL) is set
+    if not os.getenv("OPENAI_API_KEY"):
+        print("Skipping example: OPENAI_API_KEY not set.")
     else:
         try:
-            test_model = "gemini-1.5-flash" # Example model
-            client = NewGeminiClient(test_model)
-            print("GeminiClient created successfully.")
+            test_model = "gpt-4o-mini"  # Example model
+            client = NewOpenAIClient(test_model)
+            print("OpenAIClient created successfully.")
 
             # Example query
             try:
-                # Use assumed temp scale for Gemini (1.0)
-                opts = Options(temperature=70, max_tokens=100, temperature_scale=GEMINI_TEMP_SCALE)
+                # Use default temp scale (2.0)
+                opts = Options(temperature=70, max_tokens=100)
                 response = client.QueryText(
-                    "You are a helpful assistant.",
-                    ["What is the weather like today?"],
-                    opts
+                    "You are a poetic assistant.",
+                    ["Write a short haiku about clouds."],
+                    opts,
                 )
                 print(f"\nQuery Response from {test_model}:")
                 print(response)
@@ -28,13 +28,12 @@ if __name__ == "__main__":
                 # Test empty prompt error
                 print("\nTesting empty prompt error:")
                 try:
-                    client.QueryText("System", [],  opts)
+                    client.QueryText("System", [], opts)
                 except ValueError as e:
                     print(f"Successfully caught expected ValueError: {e}")
 
             except Exception as e:
                 print(f"An unexpected error occurred during query: {e}")
-
 
             client.Close()
             print("\nClient closed.")

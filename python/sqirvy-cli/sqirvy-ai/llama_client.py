@@ -3,6 +3,7 @@ Sqirvy-ai: Llama Client Implementation (using OpenAI compatible API)
 """
 
 import os
+
 # Llama models often expose an OpenAI-compatible API, so we use ChatOpenAI
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -14,10 +15,12 @@ from .client import Client, Options, query_text_langchain, DefaultTempScale
 # Llama via OpenAI-compatible API likely uses 0.0-2.0 scale
 LLAMA_TEMP_SCALE = DefaultTempScale
 
+
 class LlamaClient(Client):
     """
     Client implementation for Llama models via an OpenAI-compatible API using LangChain.
     """
+
     def __init__(self, llm: ChatOpenAI):
         """
         Initializes the LlamaClient.
@@ -47,11 +50,10 @@ class LlamaClient(Client):
         """
         # Ensure the correct temperature scale is used (defaults to 2.0 if None)
         if options.temperature_scale is None:
-             options.temperature_scale = LLAMA_TEMP_SCALE
+            options.temperature_scale = LLAMA_TEMP_SCALE
 
         # Delegate to the common LangChain query function
         return query_text_langchain(self.llm, system, prompts, options)
-
 
     def Close(self):
         """
@@ -59,6 +61,7 @@ class LlamaClient(Client):
         """
         # The LangChain client doesn't typically require explicit closing.
         pass
+
 
 def NewLlamaClient(model: str) -> LlamaClient:
     """
@@ -84,17 +87,17 @@ def NewLlamaClient(model: str) -> LlamaClient:
 
     try:
         # Use ChatOpenAI but point it to the Llama endpoint
-        # Model name might be passed during invoke or sometimes needed here depending on provider
         llm = ChatOpenAI(
             base_url=base_url,
             api_key=api_key,
             model=model,
         )
-        print(f"Using Llama Base URL: {base_url}") # Info message
+        print(f"Using Llama Base URL: {base_url}")  # Info message
     except Exception as e:
         # Catch potential initialization errors from LangChain
         raise Exception(f"Failed to create LangChain client for Llama: {e}") from e
 
     return LlamaClient(llm)
+
 
 #
