@@ -1,0 +1,2 @@
+[console_scripts]
+sqirvy_cli = sqirvy_cli.main:main

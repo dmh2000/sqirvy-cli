@@ -1,9 +1,9 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "sqirvy-cli"
+name = "sqirvy_cli"
 version = "2025.0.0"
 authors = [
     { name="david howard" },
@@ -13,4 +13,8 @@ license-files = ["LICENSE"]
 dependencies = [
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["sqirvy_cli"]
+
 [project.scripts]
+sqirvy_cli = "sqirvy_cli.main:main"
