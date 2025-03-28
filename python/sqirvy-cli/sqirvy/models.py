@@ -11,7 +11,6 @@ from typing import List, Dict, NamedTuple
 
 # Supported AI providers
 ANTHROPIC = "anthropic"
-DEEPSEEK = "deepseek"
 GEMINI = "gemini"
 OPENAI = "openai"
 LLAMA = "llama"
@@ -39,9 +38,6 @@ MODEL_TO_PROVIDER: Dict[str, str] = {
     "claude-3-haiku-20240307": ANTHROPIC,
     "claude-3-opus-latest": ANTHROPIC,
     "claude-3-opus-20240229": ANTHROPIC,
-    # deepseek models
-    "deepseek-r1": DEEPSEEK,
-    "deepseek-v3": DEEPSEEK,
     # google gemini models
     "gemini-2.0-flash": GEMINI,
     "gemini-1.5-flash": GEMINI,
@@ -52,7 +48,6 @@ MODEL_TO_PROVIDER: Dict[str, str] = {
     "gpt-4o": OPENAI,
     "gpt-4o-mini": OPENAI,
     "gpt-4-turbo": OPENAI,
-    "o1-mini": OPENAI,
     # llama models
     "llama3.3-70b": LLAMA,
 }
@@ -64,9 +59,6 @@ MODEL_TO_MAX_TOKENS: Dict[str, int] = {
     "claude-3-5-sonnet-latest": MAX_TOKENS_DEFAULT,
     "claude-3-5-haiku-latest": MAX_TOKENS_DEFAULT,
     "claude-3-opus-latest": 4096,
-    # deepseek models
-    "deepseek-r1": MAX_TOKENS_DEFAULT,
-    "deepseek-v3": MAX_TOKENS_DEFAULT,
     # google gemini models
     "gemini-2.0-flash": MAX_TOKENS_DEFAULT,
     "gemini-1.5-flash": MAX_TOKENS_DEFAULT,
@@ -75,7 +67,6 @@ MODEL_TO_MAX_TOKENS: Dict[str, int] = {
     "gpt-4o": 4096,
     "gpt-4o-mini": 4096,
     "gpt-4-turbo": 4096,
-    "o1-mini": MAX_TOKENS_DEFAULT,
     # llama models
     "llama3.3-70b": MAX_TOKENS_DEFAULT,
 }
@@ -122,11 +113,10 @@ def get_provider_name(model: str) -> str:
         ValueError: If the model is not recognized.
     """
     resolved_model = get_model_alias(model)
-    provider = MODEL_TO_PROVIDER.get(resolved_model)
-    if provider:
-        return provider
-    else:
-        raise ValueError(f"Unrecognized model: {model}")
+    prv = MODEL_TO_PROVIDER.get(resolved_model)
+    if prv:
+        return prv
+    raise ValueError(f"Unrecognized model: {model}")
 
 
 def get_max_tokens(model: str) -> int:

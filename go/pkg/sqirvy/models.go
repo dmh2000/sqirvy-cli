@@ -23,7 +23,6 @@ func GetModelAlias(model string) string {
 // Supported AI providers
 const (
 	Anthropic string = "anthropic" // Anthropic's Claude models
-	DeepSeek  string = "deepseek"  // DeepSeek's models
 	Gemini    string = "gemini"    // Google's Gemini models
 	OpenAI    string = "openai"    // OpenAI's GPT models
 	Llama     string = "llama"     // Meta's Llama models
@@ -42,9 +41,6 @@ var modelToProvider = map[string]string{
 	"claude-3-haiku-20240307":    Anthropic,
 	"claude-3-opus-latest":       Anthropic,
 	"claude-3-opus-20240229":     Anthropic,
-	// deepseek models
-	"deepseek-r1": DeepSeek,
-	"deepseek-v3": DeepSeek,
 	// google gemini models
 	// gemini-2.0-pro-exp-02-05
 	// gemini-2.0-flash-thinking-exp-01-21
@@ -57,34 +53,29 @@ var modelToProvider = map[string]string{
 	"gpt-4o":      OpenAI,
 	"gpt-4o-mini": OpenAI,
 	"gpt-4-turbo": OpenAI,
-	"o1-mini":     OpenAI,
 	// "o3-mini":     "openai",
 	// llama models
 	"llama3.3-70b": Llama,
 }
 
 // ModelToMaxTokens maps model names to their maximum token limits.
-// If a model is not in this map, MaxTokensDefault will be used.
+// If a model is not in this map, MAX_TOKENS_DEFAULT will be used.
 var modelToMaxTokens = map[string]int64{
 	// anthropic models
-	"claude-3-7-sonnet-latest": MaxTokensDefault,
-	"claude-3-5-sonnet-latest": MaxTokensDefault,
-	"claude-3-5-haiku-latest":  MaxTokensDefault,
+	"claude-3-7-sonnet-latest": MAX_TOKENS_DEFAULT,
+	"claude-3-5-sonnet-latest": MAX_TOKENS_DEFAULT,
+	"claude-3-5-haiku-latest":  MAX_TOKENS_DEFAULT,
 	"claude-3-opus-latest":     4096,
-	// deepseek models
-	"deepseek-r1": MaxTokensDefault,
-	"deepseek-v3": MaxTokensDefault,
 	// google gemini models
-	"gemini-2.0-flash": MaxTokensDefault,
-	"gemini-1.5-flash": MaxTokensDefault,
-	"gemini-1.5-pro":   MaxTokensDefault,
+	"gemini-2.0-flash": MAX_TOKENS_DEFAULT,
+	"gemini-1.5-flash": MAX_TOKENS_DEFAULT,
+	"gemini-1.5-pro":   MAX_TOKENS_DEFAULT,
 	// openai models
 	"gpt-4o":      4096,
 	"gpt-4o-mini": 4096,
 	"gpt-4-turbo": 4096,
-	"o1-mini":     MaxTokensDefault,
 	// llama models
-	"llama3.3-70b": MaxTokensDefault,
+	"llama3.3-70b": MAX_TOKENS_DEFAULT,
 }
 
 func GetModelList() []string {
@@ -118,10 +109,10 @@ func GetProviderName(model string) (string, error) {
 }
 
 // GetMaxTokens returns the maximum token limit for a given model identifier.
-// Returns MaxTokensDefault if the model is not in ModelToMaxTokens.
+// Returns MAX_TOKENS_DEFAULT if the model is not in ModelToMaxTokens.
 func GetMaxTokens(model string) int64 {
 	if maxTokens, ok := modelToMaxTokens[model]; ok {
 		return maxTokens
 	}
-	return MaxTokensDefault
+	return MAX_TOKENS_DEFAULT
 }

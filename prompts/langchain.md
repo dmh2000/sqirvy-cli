@@ -9,8 +9,6 @@
  ./go/pkg/sqirvy/llama_test.go
  ./go/pkg/sqirvy/gemini_test.go
  ./go/pkg/sqirvy/anthropic_test.go
- ./go/pkg/sqirvy/deepseek.go
- ./go/pkg/sqirvy/deepseek_test.go
  ./go/pkg/sqirvy/models_test.go
  ./go/pkg/sqirvy/models.go
  ./go/pkg/sqirvy/anthropic.go

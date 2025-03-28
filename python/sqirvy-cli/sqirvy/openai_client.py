@@ -4,13 +4,15 @@ sqirvy: OpenAI Client Implementation
 
 import os
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
 
 # Assuming client.py is in the same directory
-from .client import Client, Options, query_text_langchain, DefaultTempScale
+from .client import Client, Options, DEFAULT_TEMPERATURE_SCALE
+from .query import query_text_langchain
 
 # Constants specific to OpenAI if needed, otherwise use defaults from client.py
-OPENAI_TEMP_SCALE = DefaultTempScale  # OpenAI typically uses 0.0-2.0, matching default
+OPENAI_TEMP_SCALE = (
+    DEFAULT_TEMPERATURE_SCALE  # OpenAI typically uses 0.0-2.0, matching default
+)
 
 
 class OpenAIClient(Client):
@@ -27,7 +29,7 @@ class OpenAIClient(Client):
         """
         self.llm = llm
 
-    def QueryText(self, system: str, prompts: list[str], options: Options) -> str:
+    def query_text(self, system: str, prompts: list[str], options: Options) -> str:
         """
         Sends a text query to the specified OpenAI model using LangChain.
 
@@ -52,15 +54,14 @@ class OpenAIClient(Client):
         # Delegate to the common LangChain query function
         return query_text_langchain(self.llm, system, prompts, options)
 
-    def Close(self):
+    def close(self):
         """
         Closes resources. For LangChain's OpenAI client, this is usually a no-op.
         """
         # The LangChain client doesn't typically require explicit closing.
-        pass
 
 
-def NewOpenAIClient(model: str) -> OpenAIClient:
+def new_openai_client(model: str) -> OpenAIClient:
     """
     Factory function to create a new OpenAIClient.
 
@@ -74,13 +75,15 @@ def NewOpenAIClient(model: str) -> OpenAIClient:
         ValueError: If the OPENAI_API_KEY environment variable is not set.
         Exception: If the LangChain client fails to initialize.
     """
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise ValueError("OPENAI_API_KEY environment variable not set")
-
-    base_url = os.getenv("OPENAI_BASE_URL")  # Optional base URL
-
     try:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+
+        base_url = os.getenv("OPENAI_BASE_URL")  # Optional base URL
+        if not base_url:
+            raise ValueError("OPENAI_BASE_URL environment variable not set")
+
         init_args = {"api_key": api_key, "model": model}
         if base_url:
             init_args["base_url"] = base_url
@@ -88,8 +91,8 @@ def NewOpenAIClient(model: str) -> OpenAIClient:
 
         # Pass the api arguments
         llm = ChatOpenAI(**init_args)
-    except Exception as e:
+    except ValueError as e:
         # Catch potential initialization errors from LangChain
-        raise Exception(f"Failed to create LangChain OpenAI client: {e}") from e
+        raise ValueError(f"Failed to create LangChain OpenAI client: {e}") from e
 
     return OpenAIClient(llm)

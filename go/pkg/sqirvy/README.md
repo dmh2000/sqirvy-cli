@@ -1,6 +1,6 @@
 # AI Client APIs Documentation
 
-This document describes the APIs available for interacting with various AI providers (DeepSeek, Google Gemini, and OpenAI).
+This document describes the APIs available for interacting with various AI providers (Google Gemini, and OpenAI).
 
 ## Common Interface
 
@@ -10,7 +10,6 @@ All providers implement the following interface for making queries. See pkg/sqir
 // pkg/sqirvy/client.go
 const (
     Anthropic Provider = "anthropic" // Anthropic's Claude models
-    DeepSeek  Provider = "deepseek"  // DeepSeek's models  
     Gemini    Provider = "gemini"    // Google's Gemini models
     OpenAI    Provider = "openai"    // OpenAI's GPT models
     MetaLlama Provider = "llama"     // Meta's Llama models
@@ -71,27 +70,11 @@ All methods return errors in the following cases:
 The following environment variables are used:
 
 - `ANTHROPIC_API_KEY` - For Anthropic Claude API access
-- `DEEPSEEK_API_KEY` and `DEEPSEEK_BASE_URL` - For DeepSeek API access
 - `GEMINI_API_KEY` - For Google Gemini API access
 - `LLAMA_API_KEY` and `LLAMA_BASE_URL` - For Meta Llama API access
 - `OPENAI_API_KEY` - For OpenAI API access
 
 ## Provider-Specific Implementations
-
-### DeepSeek Client
-
-The DeepSeek client interfaces with DeepSeek's models.
-
-#### Models
-
-- Tested with: `deepseek-coder`, `deepseek-chat`
-
-#### Features
-
-- Temperature scaled to 0-2.0 range
-- Default max tokens: 8192
-- Requires both API key and base URL
-- Returns error if prompt is empty
 
 ### Google Gemini Client
 

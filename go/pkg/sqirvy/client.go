@@ -5,7 +5,6 @@
 // - Google (Gemini models)
 // - OpenAI (GPT models)
 // - Meta (Llama models)
-// - DeepSeek (DeepSeek models)
 //
 // It provides a consistent interface for making text and JSON queries while handling
 // provider-specific implementation details internally.
@@ -21,13 +20,13 @@ import (
 )
 
 const (
-	// MaxTokensDefault is the default maximum number of tokens in responses
-	MaxTokensDefault = 4096
+	// MAX_TOKENS_DEFAULT is the default maximum number of tokens in responses
+	MAX_TOKENS_DEFAULT = 4096
 
 	// Temperature limits for model queries (0-100 scale)
-	MinTemperature = 0.0
-	MaxTemperature = 100.0
-	TempScale      = 2.0
+	MIN_TEMPERATURE = 0.0
+	MAX_TEMPERATURE = 100.0
+	TempScale       = 2.0
 
 	// request timeout in seconds
 	RequestTimeout = time.Second * 15
@@ -63,12 +62,6 @@ func NewClient(provider string) (Client, error) {
 			return nil, fmt.Errorf("failed to create Anthropic client: %w", err)
 		}
 		return client, nil
-	case DeepSeek:
-		client, err := NewDeepSeekClient()
-		if err != nil {
-			return nil, fmt.Errorf("failed to create DeepSeek client: %w", err)
-		}
-		return client, nil
 	case Gemini:
 		client, err := NewGeminiClient()
 		if err != nil {
@@ -102,18 +95,18 @@ func QueryTextLangChain(ctx context.Context, llm llms.Model, system string, prom
 	}
 
 	// Set default and validate temperature
-	if options.Temperature < MinTemperature {
-		options.Temperature = MinTemperature
+	if options.Temperature < MIN_TEMPERATURE {
+		options.Temperature = MIN_TEMPERATURE
 	}
-	if options.Temperature > MaxTemperature {
-		return "", fmt.Errorf("temperature must be between %.1f and %.1f", MinTemperature, MaxTemperature)
+	if options.Temperature > MAX_TEMPERATURE {
+		return "", fmt.Errorf("temperature must be between %.1f and %.1f", MIN_TEMPERATURE, MAX_TEMPERATURE)
 	}
 	// Scale temperature based on provider expectations (0-1 for Anthropic, 0-2 for others using langchaingo currently)
 	// TODO: Make this scaling more robust, perhaps based on the llm type or provider name.
 	if options.TemperatureScale == 0 {
 		options.TemperatureScale = TempScale
 	}
-	options.Temperature = (options.Temperature * options.TemperatureScale) / MaxTemperature
+	options.Temperature = (options.Temperature * options.TemperatureScale) / MAX_TEMPERATURE
 
 	// system prompt
 	content := []llms.MessageContent{

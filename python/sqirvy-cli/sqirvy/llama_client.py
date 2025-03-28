@@ -1,19 +1,19 @@
 """
-sqirvy: Llama Client Implementation (using OpenAI compatible API)
+Llama Client Implementation (using OpenAI compatible API)
 """
 
 import os
 
 # Llama models often expose an OpenAI-compatible API, so we use ChatOpenAI
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
 
-# Assuming client.py is in the same directory
-from .client import Client, Options, query_text_langchain, DefaultTempScale
+from .client import Client, Options
+from .query import query_text_langchain
+
 
 # Constants specific to Llama if needed, otherwise use defaults
 # Llama via OpenAI-compatible API likely uses 0.0-2.0 scale
-LLAMA_TEMP_SCALE = DefaultTempScale
+LLAMA_TEMP_SCALE = 1.0
 
 
 class LlamaClient(Client):
@@ -30,7 +30,7 @@ class LlamaClient(Client):
         """
         self.llm = llm
 
-    def QueryText(self, system: str, prompts: list[str], options: Options) -> str:
+    def query_text(self, system: str, prompts: list[str], options: Options) -> str:
         """
         Sends a text query to the specified Llama model using LangChain's OpenAI interface.
 
@@ -55,15 +55,14 @@ class LlamaClient(Client):
         # Delegate to the common LangChain query function
         return query_text_langchain(self.llm, system, prompts, options)
 
-    def Close(self):
+    def close(self):
         """
         Closes resources. For LangChain's client, this is usually a no-op.
         """
         # The LangChain client doesn't typically require explicit closing.
-        pass
 
 
-def NewLlamaClient(model: str) -> LlamaClient:
+def new_llama_client(model: str) -> LlamaClient:
     """
     Factory function to create a new LlamaClient.
 
@@ -93,11 +92,8 @@ def NewLlamaClient(model: str) -> LlamaClient:
             model=model,
         )
         print(f"Using Llama Base URL: {base_url}")  # Info message
-    except Exception as e:
+    except ValueError as e:
         # Catch potential initialization errors from LangChain
-        raise Exception(f"Failed to create LangChain client for Llama: {e}") from e
+        raise ValueError(f"Failed to create LangChain client for Llama: {e}") from e
 
     return LlamaClient(llm)
-
-
-#

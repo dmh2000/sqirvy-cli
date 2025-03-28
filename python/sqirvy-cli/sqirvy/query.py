@@ -1,11 +1,19 @@
+"""
+Helper function to execute a text query using a LangChain chat model.
+"""
+
 from typing import List, Optional
 
 # Import Langchain components needed for the helper function
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from .models import MODEL_TO_PROVIDER
-from .client import MaxTemperature, MaxTokensDefault, MinTemperature, DefaultTempScale
+from .client import (
+    MAX_TEMPERATURE,
+    MAX_TOKENS_DEFAULT,
+    MIN_TEMPERATURE,
+    DEFAULT_TEMPERATURE_SCALE,
+)
 
 
 class Options:
@@ -13,9 +21,10 @@ class Options:
     Configuration options for AI client queries.
 
     Attributes:
-        temperature: Controls randomness (0-100). Defaults to MinTemperature if None.
-        max_tokens: Maximum response tokens. Defaults to MaxTokensDefault if None or 0.
-        temperature_scale: Provider-specific scaling factor for temperature (e.g., 1.0 for Anthropic, 2.0 for OpenAI). Defaults to DefaultTempScale if None.
+        temperature: Controls randomness (0-100). Defaults to MIN_TEMPERATURE if None.
+        max_tokens: Maximum response tokens. Defaults to MAX_TOKENS_DEFAULT if None or 0.
+        temperature_scale: Provider-specific scaling factor for temperature
+        e.g., 1.0 for Anthropic, 2.0 for OpenAI). Defaults to DEFAULT_TEMPERATURE_SCALE if None.
     """
 
     def __init__(
@@ -24,18 +33,22 @@ class Options:
         max_tokens: Optional[int] = None,
         temperature_scale: Optional[float] = None,
     ):
-        self.temperature = temperature if temperature is not None else MinTemperature
+        self.temperature = temperature if temperature is not None else MIN_TEMPERATURE
         self.max_tokens = (
             max_tokens
             if max_tokens is not None and max_tokens > 0
-            else MaxTokensDefault
+            else MAX_TOKENS_DEFAULT
         )
         self.temperature_scale = (
-            temperature_scale if temperature_scale is not None else DefaultTempScale
+            temperature_scale
+            if temperature_scale is not None
+            else DEFAULT_TEMPERATURE_SCALE
         )
 
     def __repr__(self):
-        return f"Options(temperature={self.temperature}, max_tokens={self.max_tokens}, temperature_scale={self.temperature_scale})"
+        return f"Options(temperature={self.temperature}, \
+            max_tokens={self.max_tokens}, \
+            temperature_scale={self.temperature_scale})"
 
 
 # --- LangChain Query Helper Function ---
@@ -65,15 +78,11 @@ def query_text_langchain(
         raise ValueError("Prompts list cannot be empty for text query.")
 
     # Validate and scale temperature
-    temp = options.temperature
-    if not MinTemperature <= temp <= MaxTemperature:
+    temperature = options.temperature
+    if not MIN_TEMPERATURE <= temperature <= MAX_TEMPERATURE:
         raise ValueError(
-            f"Temperature must be between {MinTemperature} and {MaxTemperature}, got {temp}"
+            f"Temperature must be between {MIN_TEMPERATURE} and {MAX_TEMPERATURE}, got {temperature}"
         )
-
-    # Use the provided scale, defaulting if necessary
-    temp_scale = options.temperature_scale
-    scaled_temperature = (temp * temp_scale) / MaxTemperature
 
     # Construct messages
     messages = [SystemMessage(content=system)]
@@ -83,7 +92,7 @@ def query_text_langchain(
     # Prepare LangChain options
     langchain_options = {
         # model": model,
-        "temperature": 0.5,
+        "temperature": temperature,
     }
     # # Add max_tokens if provided (LangChain uses 'max_tokens' generally,
     # # though some integrations might have specific names like 'max_tokens_to_sample')
@@ -98,10 +107,9 @@ def query_text_langchain(
         # Extract content from response
         if hasattr(response, "content"):
             return response.content
-        else:
-            # Handle unexpected response structure
-            raise ValueError("Failed to parse content from LLM response.")
+        # Handle unexpected response structure
+        raise ValueError("Failed to parse content from LLM response.")
 
-    except Exception as e:
+    except ValueError as e:
         # Catch and re-raise LangChain or API errors
-        raise Exception(f"LangChain API query failed: {e}") from e
+        raise ValueError(f"LangChain API query failed: {e}") from e

@@ -1,5 +1,9 @@
-from .openai_client import NewOpenAIClient, Options
+"""
+OpenAI API Client Test
+"""
+
 import os
+from .openai_client import new_openai_client, Options
 
 
 # Example Usage (optional, for testing)
@@ -9,36 +13,34 @@ if __name__ == "__main__":
         print("Skipping example: OPENAI_API_KEY not set.")
     else:
         try:
-            test_model = "gpt-4o-mini"  # Example model
-            client = NewOpenAIClient(test_model)
+            TEST_MODEL = "gpt-4o-mini"  # Example model
+            client = new_openai_client(TEST_MODEL)
             print("OpenAIClient created successfully.")
 
             # Example query
             try:
                 # Use default temp scale (2.0)
                 opts = Options(temperature=1.0, max_tokens=100)
-                response = client.QueryText(
+                response = client.query_text(
                     "You are a poetic assistant.",
                     ["Write a short haiku about clouds."],
                     opts,
                 )
-                print(f"\nQuery Response from {test_model}:")
+                print(f"\nQuery Response from {TEST_MODEL}:")
                 print(response)
 
                 # Test empty prompt error
                 print("\nTesting empty prompt error:")
                 try:
-                    client.QueryText("System", [], opts)
+                    client.query_text("System", [], opts)
                 except ValueError as e:
                     print(f"Successfully caught expected ValueError: {e}")
 
-            except Exception as e:
+            except ValueError as e:
                 print(f"An unexpected error occurred during query: {e}")
 
-            client.Close()
+            client.close()
             print("\nClient closed.")
 
         except ValueError as e:
             print(f"Configuration Error: {e}")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")

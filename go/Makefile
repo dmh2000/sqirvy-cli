@@ -1,4 +1,4 @@
-.PHONY: build test clean
+.PHONY: test clean debug release review deploy
 
 SUBDIRS = cmd pkg
 PKG_SOURCES := $(shell find pkg -type f -name '*.go')
@@ -6,7 +6,7 @@ CMD_SOURCES := $(shell find cmd -type f -name '*.go')
 SOURCES:= $(PKG_SOURCES) $(CMD_SOURCES)
 
 # silence make output. remove -s to see make output
-export SILENT=-s
+export SILENT=
 
 debug:
 	@for dir in $(SUBDIRS); do \
