@@ -111,11 +111,14 @@ class TestSqirvyCliArgs(unittest.TestCase):
 
 class TestSqirvyCliMain(unittest.TestCase):
 
-    @patch("sys.stdin", io.StringIO("Test stdin content\n"))
     @patch("sys.stdout", new_callable=io.StringIO)
-    @patch("sys.stdin.isatty", return_value=False)  # Simulate piped input
-    def test_main_output_with_piped_stdin(self, mock_isatty, mock_stdout):
+    @patch("main.sys.stdin") # Patch stdin within the main module's scope
+    def test_main_output_with_piped_stdin(self, mock_stdin, mock_stdout):
         """Test main output when stdin is piped."""
+        # Configure the mock stdin object
+        mock_stdin.isatty.return_value = False
+        mock_stdin.read.return_value = "Test stdin content\n"
+
         test_args = ["-m", "main-model", "-t", "1.2", "main_file.py"]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
             main()
