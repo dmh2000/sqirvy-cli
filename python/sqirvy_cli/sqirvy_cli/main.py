@@ -54,8 +54,10 @@ def main():
     """Main execution function."""
     args = parse_arguments()
 
-    # Read from stdin
-    stdin_content = sys.stdin.read()
+    # Read from stdin only if it's not connected to a TTY (i.e., piped/redirected)
+    stdin_content = ""
+    if not sys.stdin.isatty():
+        stdin_content = sys.stdin.read()
 
     # Print collected information
     print("--- Arguments ---")
