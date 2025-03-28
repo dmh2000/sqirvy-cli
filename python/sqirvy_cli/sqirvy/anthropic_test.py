@@ -2,8 +2,10 @@
 sqirvy: Anthropic Client TEst
 """
 
+from .anthropic_client import new_anthropic_client
+from .client import Options
+
 if __name__ == "__main__":
-    from .anthropic_client import new_anthropic_client, Options, ANTHROPIC_TEMP_SCALE
     import os
 
     # Ensure ANTHROPIC_API_KEY is set in your environment for this to work
@@ -21,7 +23,7 @@ if __name__ == "__main__":
             opts = Options(
                 temperature=1.0,
                 max_tokens=2048,
-                temperature_scale=ANTHROPIC_TEMP_SCALE,
+                temperature_scale=1.0,
             )
             response = client.query_text(
                 "You are a helpful assistant.",

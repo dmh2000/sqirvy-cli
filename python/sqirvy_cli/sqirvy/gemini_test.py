@@ -3,7 +3,8 @@ Gemini Client Test
 """
 
 import os
-from .gemini_client import new_gemini_client, Options, GEMINI_TEMP_SCALE
+from .gemini_client import new_gemini_client
+from .client import Options
 
 # Example Usage (optional, for testing)
 if __name__ == "__main__":
@@ -20,9 +21,7 @@ if __name__ == "__main__":
             # Example query
             try:
                 # Use assumed temp scale for Gemini (1.0)
-                opts = Options(
-                    temperature=1.0, max_tokens=100, temperature_scale=GEMINI_TEMP_SCALE
-                )
+                opts = Options(temperature=1.0, max_tokens=100, temperature_scale=1.0)
                 response = client.query_text(
                     "You are a helpful assistant.",
                     ["What is the weather like today?"],

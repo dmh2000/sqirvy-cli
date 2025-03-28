@@ -1,4 +1,4 @@
 .PHONY: test
 
 test:
-	$(MAKE) -C sqirvy-cli test
+	$(MAKE) -C sqirvy_cli test

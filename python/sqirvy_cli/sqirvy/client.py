@@ -6,10 +6,6 @@ from abc import ABC, abstractmethod
 from typing import List, Optional  # Added Optional, Union, Dict, List
 
 from .models import MODEL_TO_PROVIDER
-from .gemini_client import new_gemini_client  # pylint: disable=cyclic-import
-from .anthropic_client import new_anthropic_client  # pylint: disable=cyclic-import
-from .openai_client import new_openai_client  # pylint: disable=cyclic-import
-from .llama_client import new_llama_client  # pylint: disable=cyclic-import
 
 # Constants matching Go implementation
 MAX_TOKENS_DEFAULT = 4096
@@ -111,6 +107,12 @@ def new_client(model: str) -> Optional[Client]:
         ValueError: If the specified provider is not supported.
         Exception: If client creation fails for other reasons (e.g., missing API key).
     """
+
+    from .gemini_client import new_gemini_client  # pylint: disable=cyclic-import
+    from .anthropic_client import new_anthropic_client  # pylint: disable=cyclic-import
+    from .openai_client import new_openai_client  # pylint: disable=cyclic-import
+    from .llama_client import new_llama_client  # pylint: disable=cyclic-import
+
     provider = MODEL_TO_PROVIDER[model]
     provider = provider.lower()  # Ensure case-insensitivity
 

@@ -92,7 +92,7 @@ def query_text_langchain(
     # Prepare LangChain options
     langchain_options = {
         # model": model,
-        "temperature": temperature,
+        # "temperature": temperature,
     }
     # # Add max_tokens if provided (LangChain uses 'max_tokens' generally,
     # # though some integrations might have specific names like 'max_tokens_to_sample')
