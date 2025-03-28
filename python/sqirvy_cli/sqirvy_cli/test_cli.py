@@ -112,10 +112,10 @@ class TestSqirvyCliMain(unittest.TestCase):
 
     @patch("sys.stdin", io.StringIO("Test stdin content\n"))
     @patch("sys.stdout", new_callable=io.StringIO)
-    def test_main_output(self, mock_stdout):
-        """Test the main function's output."""
+    @patch("sys.stdin.isatty", return_value=False)  # Simulate piped input
+    def test_main_output_with_piped_stdin(self, mock_isatty, mock_stdout):
+        """Test main output when stdin is piped."""
         test_args = ["-m", "main-model", "-t", "1.2", "main_file.py"]
-        # Mock sys.argv for the main function
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
             main()
 
@@ -130,11 +130,13 @@ class TestSqirvyCliMain(unittest.TestCase):
         )
         # Use assertEqual for clearer diffs on failure
         self.assertEqual(mock_stdout.getvalue(), expected_output)
+        mock_isatty.assert_called_once() # Verify isatty was checked
 
     @patch("sys.stdin", io.StringIO("Minimal input"))
     @patch("sys.stdout", new_callable=io.StringIO)
-    def test_main_output_minimal(self, mock_stdout):
-        """Test the main function's output with minimal args."""
+    @patch("sys.stdin.isatty", return_value=False) # Simulate piped input
+    def test_main_output_minimal_with_piped_stdin(self, mock_isatty, mock_stdout):
+        """Test main output with minimal args and piped stdin."""
         test_args = []  # No flags or files
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
             main()
@@ -150,6 +152,47 @@ class TestSqirvyCliMain(unittest.TestCase):
         )
         # Use assertEqual for clearer diffs on failure
         self.assertEqual(mock_stdout.getvalue(), expected_output)
+        mock_isatty.assert_called_once() # Verify isatty was checked
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    @patch("sys.stdin.isatty", return_value=True) # Simulate TTY input
+    def test_main_output_with_tty_stdin(self, mock_isatty, mock_stdout):
+        """Test main output when stdin is a TTY (no piped input)."""
+        test_args = ["-m", "tty-model", "-t", "0.9", "tty_file.txt"]
+        with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
+            main()
+
+        expected_output = (
+            "--- Arguments ---\n"
+            "Model: tty-model\n"
+            "Temperature: 0.9\n"
+            "Files/URLs: ['tty_file.txt']\n"
+            "--- Stdin Content ---\n"
+            "\n" # Expect empty stdin content
+            "-------------------\n"
+        )
+        self.assertEqual(mock_stdout.getvalue(), expected_output)
+        mock_isatty.assert_called_once() # Verify isatty was checked
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    @patch("sys.stdin.isatty", return_value=True) # Simulate TTY input
+    def test_main_output_minimal_with_tty_stdin(self, mock_isatty, mock_stdout):
+        """Test main output with minimal args and TTY stdin."""
+        test_args = [] # No flags or files
+        with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
+            main()
+
+        expected_output = (
+            "--- Arguments ---\n"
+            "Model: None\n"
+            "Temperature: 1.0\n"
+            "Files/URLs: []\n"
+            "--- Stdin Content ---\n"
+            "\n" # Expect empty stdin content
+            "-------------------\n"
+        )
+        self.assertEqual(mock_stdout.getvalue(), expected_output)
+        mock_isatty.assert_called_once() # Verify isatty was checked
 
 
 if __name__ == "__main__":
