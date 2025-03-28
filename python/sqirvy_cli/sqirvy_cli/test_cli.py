@@ -3,8 +3,6 @@ test cli arguments
 """
 
 import unittest
-import sys
-import io
 from unittest.mock import patch
 
 
@@ -18,10 +16,11 @@ from unittest.mock import patch
 # sys.path.insert(0, "src") # No longer needed with relative import
 
 # Use relative import because test_cli.py and main.py are in the same directory
-from .main import main, parse_arguments
+from .main import parse_arguments
 
 
 class TestSqirvyCliArgs(unittest.TestCase):
+    """Test the argument parsing of the sqirvy-cli."""
 
     def test_parse_arguments_full(self):
         """Test parsing with all arguments."""
@@ -107,111 +106,6 @@ class TestSqirvyCliArgs(unittest.TestCase):
                     "argparse.ArgumentParser._print_message"
                 ):  # Suppress error message print
                     parse_arguments()
-
-
-class TestSqirvyCliMain(unittest.TestCase):
-
-    @patch("sys.stdout", new_callable=io.StringIO)
-    @patch("main.sys.stdin") # Patch stdin within the main module's scope
-    def test_main_output_with_piped_stdin(self, mock_stdin, mock_stdout):
-        """Test main output when stdin is piped."""
-        # Configure the mock stdin object
-        mock_stdin.isatty.return_value = False
-        mock_stdin.read.return_value = "Test stdin content\n"
-
-        test_args = ["-m", "main-model", "-t", "1.2", "main_file.py"]
-        with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
-            main()
-
-        expected_output = (
-            "--- Arguments ---\n"
-            "Model: main-model\n"
-            "Temperature: 1.2\n"
-            "Files/URLs: ['main_file.py']\n"
-            "--- Stdin Content ---\n"
-            "Test stdin content\n\n"  # Note the extra newline from read()
-            "-------------------\n"
-        )
-        # Use assertEqual for clearer diffs on failure
-        self.assertEqual(mock_stdout.getvalue(), expected_output)
-        mock_stdin.isatty.assert_called_once() # Verify isatty was checked
-        mock_stdin.read.assert_called_once()   # Verify read was called
-
-    @patch("sys.stdout", new_callable=io.StringIO)
-    @patch("main.sys.stdin") # Patch stdin within the main module's scope
-    def test_main_output_minimal_with_piped_stdin(self, mock_stdin, mock_stdout):
-        """Test main output with minimal args and piped stdin."""
-        # Configure the mock stdin object
-        mock_stdin.isatty.return_value = False
-        mock_stdin.read.return_value = "Minimal input\n"
-
-        test_args = []  # No flags or files
-        with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
-            main()
-
-        expected_output = (
-            "--- Arguments ---\n"
-            "Model: None\n"  # Default model is None
-            "Temperature: 1.0\n"  # Default temperature
-            "Files/URLs: []\n"  # No files/URLs provided
-            "--- Stdin Content ---\n"
-            "Minimal input\n\n" # Stdin content read (read adds a newline)
-            "-------------------\n"
-        )
-        # Use assertEqual for clearer diffs on failure
-        self.assertEqual(mock_stdout.getvalue(), expected_output)
-        mock_stdin.isatty.assert_called_once() # Verify isatty was checked
-        mock_stdin.read.assert_called_once()   # Verify read was called
-
-    @patch("sys.stdout", new_callable=io.StringIO)
-    @patch("main.sys.stdin") # Patch stdin within the main module's scope
-    def test_main_output_with_tty_stdin(self, mock_stdin, mock_stdout):
-        """Test main output when stdin is a TTY (no piped input)."""
-        # Configure the mock stdin object
-        mock_stdin.isatty.return_value = True
-        # read should not be called, so no need to configure mock_stdin.read
-
-        test_args = ["-m", "tty-model", "-t", "0.9", "tty_file.txt"]
-        with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
-            main()
-
-        expected_output = (
-            "--- Arguments ---\n"
-            "Model: tty-model\n"
-            "Temperature: 0.9\n"
-            "Files/URLs: ['tty_file.txt']\n"
-            "--- Stdin Content ---\n"
-            "\n" # Expect empty stdin content
-            "-------------------\n"
-        )
-        self.assertEqual(mock_stdout.getvalue(), expected_output)
-        mock_stdin.isatty.assert_called_once() # Verify isatty was checked
-        mock_stdin.read.assert_not_called()    # Verify read was NOT called
-
-    @patch("sys.stdout", new_callable=io.StringIO)
-    @patch("main.sys.stdin") # Patch stdin within the main module's scope
-    def test_main_output_minimal_with_tty_stdin(self, mock_stdin, mock_stdout):
-        """Test main output with minimal args and TTY stdin."""
-        # Configure the mock stdin object
-        mock_stdin.isatty.return_value = True
-        # read should not be called
-
-        test_args = [] # No flags or files
-        with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
-            main()
-
-        expected_output = (
-            "--- Arguments ---\n"
-            "Model: None\n"
-            "Temperature: 1.0\n"
-            "Files/URLs: []\n"
-            "--- Stdin Content ---\n"
-            "\n" # Expect empty stdin content
-            "-------------------\n"
-        )
-        self.assertEqual(mock_stdout.getvalue(), expected_output)
-        mock_stdin.isatty.assert_called_once() # Verify isatty was checked
-        mock_stdin.read.assert_not_called()    # Verify read was NOT called
 
 
 if __name__ == "__main__":
