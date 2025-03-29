@@ -15,96 +15,119 @@ from unittest.mock import patch
 # A simpler approach if tests are run relative to the python directory:
 # sys.path.insert(0, "src") # No longer needed with relative import
 
-# Use relative import because test_cli.py and main.py are in the same directory
-from .main import parse_arguments
+# Use relative import because test_cli.py and main.py are in the same package
+from .main import parse_arguments, SUPPORTED_COMMANDS
 
 
 class TestSqirvyCliArgs(unittest.TestCase):
-    """Test the argument parsing of the sqirvy-cli."""
+    """Test the argument parsing of the sqirvy-cli with subcommands."""
 
-    def test_parse_arguments_full(self):
-        """Test parsing with all arguments."""
-        test_args = ["-m", "test-model", "-t", "0.5", "file1.txt", "http://example.com"]
+    def test_query_command_full(self):
+        """Test 'query' command with all arguments."""
+        test_args = ["query", "-m", "test-model", "-t", "0.5", "file1.txt", "http://example.com"]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
             args = parse_arguments()
+            self.assertEqual(args.command, "query")
             self.assertEqual(args.model, "test-model")
             self.assertEqual(args.temperature, 0.5)
             self.assertEqual(args.files_or_urls, ["file1.txt", "http://example.com"])
 
-    def test_parse_arguments_default_temp(self):
-        """Test parsing with default temperature."""
-        test_args = ["-m", "another-model", "file2.md"]
+    def test_plan_command_default_temp(self):
+        """Test 'plan' command with default temperature."""
+        test_args = ["plan", "-m", "another-model", "file2.md"]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
             args = parse_arguments()
+            self.assertEqual(args.command, "plan")
             self.assertEqual(args.model, "another-model")
             self.assertEqual(args.temperature, 1.0)  # Default value
             self.assertEqual(args.files_or_urls, ["file2.md"])
 
-    def test_parse_arguments_only_files(self):
-        """Test parsing with only files/URLs."""
-        test_args = ["config.json", "data.csv"]
+    def test_code_command_only_files(self):
+        """Test 'code' command with only files/URLs (and default flags)."""
+        test_args = ["code", "config.json", "data.csv"]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
             args = parse_arguments()
-            self.assertIsNone(args.model)
+            self.assertEqual(args.command, "code")
+            self.assertIsNone(args.model) # Model is optional for now
             self.assertEqual(args.temperature, 1.0)  # Default value
             self.assertEqual(args.files_or_urls, ["config.json", "data.csv"])
 
-    def test_parse_arguments_no_extra_args(self):
-        """Test parsing with only flags."""
-        test_args = ["-m", "flag-model", "-t", "1.9"]
+    def test_review_command_no_files(self):
+        """Test 'review' command with only flags and no files/URLs."""
+        test_args = ["review", "-m", "flag-model", "-t", "1.9"]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
             args = parse_arguments()
+            self.assertEqual(args.command, "review")
             self.assertEqual(args.model, "flag-model")
             self.assertEqual(args.temperature, 1.9)
             self.assertEqual(args.files_or_urls, [])
 
-    def test_parse_arguments_temp_edge_cases(self):
-        """Test temperature edge cases."""
+    def test_all_commands_exist(self):
+        """Test that all supported commands can be parsed without files/flags."""
+        for command in SUPPORTED_COMMANDS:
+            with self.subTest(command=command):
+                test_args = [command]
+                with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
+                    args = parse_arguments()
+                    self.assertEqual(args.command, command)
+                    self.assertIsNone(args.model)
+                    self.assertEqual(args.temperature, 1.0)
+                    self.assertEqual(args.files_or_urls, [])
+
+    def test_missing_command(self):
+        """Test error when no command is provided."""
+        test_args = ["-m", "some-model"] # No command
+        with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
+            with self.assertRaises(SystemExit):
+                 with patch("argparse.ArgumentParser._print_message"): # Suppress error
+                    parse_arguments()
+
+    def test_invalid_command(self):
+        """Test error when an invalid command is provided."""
+        test_args = ["invalid_command", "-m", "some-model"]
+        with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
+            with self.assertRaises(SystemExit):
+                 with patch("argparse.ArgumentParser._print_message"): # Suppress error
+                    parse_arguments()
+
+    def test_temp_edge_cases_with_command(self):
+        """Test temperature edge cases with a command."""
         # Valid edge case: 0.0
-        test_args_zero = ["-t", "0.0"]
+        test_args_zero = ["query", "-t", "0.0"]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args_zero):
             args = parse_arguments()
+            self.assertEqual(args.command, "query")
             self.assertEqual(args.temperature, 0.0)
 
         # Valid edge case: close to 2.0
-        test_args_near_two = ["-t", "1.999"]
+        test_args_near_two = ["plan", "-t", "1.999"]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args_near_two):
             args = parse_arguments()
+            self.assertEqual(args.command, "plan")
             self.assertEqual(args.temperature, 1.999)
 
-    def test_parse_arguments_invalid_temp_low(self):
-        """Test invalid temperature (too low)."""
-        test_args = ["-t", "-0.1"]
+    def test_invalid_temp_low_with_command(self):
+        """Test invalid temperature (too low) with a command."""
+        test_args = ["code", "-t", "-0.1"]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
-            # Argparse calls sys.exit on error, which raises SystemExit
             with self.assertRaises(SystemExit):
-                with patch(
-                    "argparse.ArgumentParser._print_message"
-                ):  # Suppress error message print
-                    parse_arguments()
-            # No need to assert on cm.exception message unless specifically required,
-            # catching SystemExit confirms argparse's error handling was triggered.
-
-    def test_parse_arguments_invalid_temp_high(self):
-        """Test invalid temperature (too high)."""
-        test_args = ["-t", "2.0"]
-        with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
-            # Argparse calls sys.exit on error, which raises SystemExit
-            with self.assertRaises(SystemExit):
-                with patch(
-                    "argparse.ArgumentParser._print_message"
-                ):  # Suppress error message print
+                with patch("argparse.ArgumentParser._print_message"):
                     parse_arguments()
 
-    def test_parse_arguments_invalid_temp_format(self):
-        """Test invalid temperature (not a float)."""
-        test_args = ["-t", "abc"]
+    def test_invalid_temp_high_with_command(self):
+        """Test invalid temperature (too high) with a command."""
+        test_args = ["review", "-t", "2.0"]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
-            # Argparse calls sys.exit on error, which raises SystemExit
             with self.assertRaises(SystemExit):
-                with patch(
-                    "argparse.ArgumentParser._print_message"
-                ):  # Suppress error message print
+                with patch("argparse.ArgumentParser._print_message"):
+                    parse_arguments()
+
+    def test_invalid_temp_format_with_command(self):
+        """Test invalid temperature (not a float) with a command."""
+        test_args = ["query", "-t", "abc"]
+        with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
+            with self.assertRaises(SystemExit):
+                with patch("argparse.ArgumentParser._print_message"):
                     parse_arguments()
 
 
