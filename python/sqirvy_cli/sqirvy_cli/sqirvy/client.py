@@ -32,12 +32,26 @@ class Options:
         max_tokens: Optional[int] = None,
         temperature_scale: Optional[float] = None,
     ):
-        self.temperature = temperature if temperature is not None else MIN_TEMPERATURE
+        # Set default temperature if not provided
+        temp_value = temperature if temperature is not None else MIN_TEMPERATURE
+        
+        # Validate temperature is within range
+        if not MIN_TEMPERATURE <= temp_value <= MAX_TEMPERATURE:
+            raise ValueError(
+                f"Temperature must be between {MIN_TEMPERATURE} and {MAX_TEMPERATURE}, got {temp_value}"
+            )
+        
+        # Set validated temperature
+        self.temperature = temp_value
+        
+        # Set max_tokens with default if needed
         self.max_tokens = (
             max_tokens
             if max_tokens is not None and max_tokens > 0
             else MAX_TOKENS_DEFAULT
         )
+        
+        # Set temperature_scale with default if needed
         self.temperature_scale = (
             temperature_scale
             if temperature_scale is not None

@@ -2,12 +2,12 @@
 Google Gemini Client Implementation
 """
 
-import os
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 
 from .client import Client, Options
 from .query import query_text_langchain
+from .env import get_api_key
 
 # Constants specific to Gemini if needed
 # Gemini's native temperature scale is often 0.0-1.0 or 0.0-2.0.
@@ -79,23 +79,23 @@ def new_gemini_client(model: str) -> GeminiClient:
     Checks for the GEMINI_API_KEY environment variable and initializes
     the LangChain ChatGoogleGenerativeAI client.
 
+    Args:
+        model: The model identifier to use.
+
     Returns:
         An instance of GeminiClient.
 
     Raises:
-        ValueError: If the GEMINI_API_KEY environment variable is not set.
-        Exception: If the LangChain client fails to initialize.
+        ValueError: If required environment variables are not set or if client initialization fails.
     """
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not set")
+    # Get required API credentials
+    provider = "gemini"
+    api_key = get_api_key(provider)
 
     try:
-        # Pass the API key explicitly. Model is specified during the query.
-        # Langchain's ChatGoogleGenerativeAI handles API key via constructor.
+        # Initialize the LangChain client
         llm = ChatGoogleGenerativeAI(model=model, google_api_key=api_key)
-    except ValueError as e:
-        # Catch potential initialization errors from LangChain
+        return GeminiClient(llm)
+    except Exception as e:
+        # Catch and contextualize initialization errors
         raise ValueError(f"Failed to create LangChain Gemini client: {e}") from e
-
-    return GeminiClient(llm)

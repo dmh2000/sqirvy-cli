@@ -2,7 +2,6 @@
 sqirvy: Anthropic Client Implementation
 """
 
-import os
 from langchain_anthropic import ChatAnthropic
 
 # from langchain_core.messages import HumanMessage, SystemMessage
@@ -10,6 +9,7 @@ from langchain_anthropic import ChatAnthropic
 
 from .client import Client, Options
 from .query import query_text_langchain
+from .env import get_api_key, get_base_url
 
 
 # Constants matching Go implementation
@@ -76,27 +76,24 @@ def new_anthropic_client(model: str) -> AnthropicClient:
     Checks for the ANTHROPIC_API_KEY environment variable and initializes
     the LangChain ChatAnthropic client.
 
+    Args:
+        model: The model identifier to use.
+
     Returns:
         An instance of AnthropicClient.
 
     Raises:
-        ValueError: If the ANTHROPIC_API_KEY environment variable is not set.
-        Exception: If the LangChain client fails to initialize.
+        ValueError: If required environment variables are not set or if client initialization fails.
     """
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise ValueError("ANTHROPIC_API_KEY environment variable not set")
-    base_url = os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
-    if not base_url:
-        raise ValueError("ANTHROPIC_BASE_URL environment variable not set")
+    # Get required API credentials
+    provider = "anthropic"
+    api_key = get_api_key(provider)
+    base_url = get_base_url(provider, default="https://api.anthropic.com")
 
     try:
-        # LangChain's ChatAnthropic automatically picks up the API key
-        # from the environment variable if not explicitly passed.
-        # We don't specify the model here; it's passed during query_text.
+        # Initialize the LangChain client
         llm = ChatAnthropic(model=model, api_key=api_key, base_url=base_url)
+        return AnthropicClient(llm)
     except Exception as e:
-        # Catch potential initialization errors from LangChain
-        raise e
-
-    return AnthropicClient(llm)
+        # Catch and contextualize initialization errors
+        raise ValueError(f"Failed to create LangChain Anthropic client: {e}") from e

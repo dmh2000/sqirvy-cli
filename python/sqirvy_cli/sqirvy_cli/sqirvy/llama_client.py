@@ -2,12 +2,11 @@
 Llama Client Implementation (using OpenAI compatible API)
 """
 
-import os
-
 # Llama models often expose an OpenAI-compatible API, so we use ChatOpenAI
 from langchain_openai import ChatOpenAI
 
 from .client import Client, Options
+from .env import get_api_key, get_base_url
 from .query import query_text_langchain
 
 
@@ -69,31 +68,28 @@ def new_llama_client(model: str) -> LlamaClient:
     Checks for LLAMA_API_KEY and LLAMA_BASE_URL environment variables
     and initializes the LangChain ChatOpenAI client configured for the Llama endpoint.
 
+    Args:
+        model: The model identifier to use.
+
     Returns:
         An instance of LlamaClient.
 
     Raises:
-        ValueError: If LLAMA_API_KEY or LLAMA_BASE_URL environment variables are not set.
-        Exception: If the LangChain client fails to initialize.
+        ValueError: If required environment variables are not set or if client initialization fails.
     """
-    api_key = os.getenv("LLAMA_API_KEY")
-    if not api_key:
-        raise ValueError("LLAMA_API_KEY environment variable not set")
-
-    base_url = os.getenv("LLAMA_BASE_URL")
-    if not base_url:
-        raise ValueError("LLAMA_BASE_URL environment variable not set")
+    # Get required API credentials
+    provider = "llama"
+    api_key = get_api_key(provider)
+    base_url = get_base_url(provider)
 
     try:
-        # Use ChatOpenAI but point it to the Llama endpoint
+        # Initialize the LangChain client for Llama
         llm = ChatOpenAI(
             base_url=base_url,
             api_key=api_key,
             model=model,
         )
-        print(f"Using Llama Base URL: {base_url}")  # Info message
-    except ValueError as e:
-        # Catch potential initialization errors from LangChain
+        return LlamaClient(llm)
+    except Exception as e:
+        # Catch and contextualize initialization errors
         raise ValueError(f"Failed to create LangChain client for Llama: {e}") from e
-
-    return LlamaClient(llm)

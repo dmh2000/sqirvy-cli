@@ -24,7 +24,15 @@ class TestSqirvyCliArgs(unittest.TestCase):
 
     def test_query_command_full(self):
         """Test 'query' command with all arguments."""
-        test_args = ["query", "-m", "test-model", "-t", "0.5", "file1.txt", "http://example.com"]
+        test_args = [
+            "query",
+            "-m",
+            "test-model",
+            "-t",
+            "0.5",
+            "file1.txt",
+            "http://example.com",
+        ]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
             args = parse_arguments()
             self.assertEqual(args.command, "query")
@@ -48,18 +56,18 @@ class TestSqirvyCliArgs(unittest.TestCase):
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
             args = parse_arguments()
             self.assertEqual(args.command, "code")
-            self.assertIsNone(args.model) # Model is optional for now
+            self.assertIsNone(args.model)  # Model is optional for now
             self.assertEqual(args.temperature, 1.0)  # Default value
             self.assertEqual(args.files_or_urls, ["config.json", "data.csv"])
 
     def test_review_command_no_files(self):
         """Test 'review' command with only flags and no files/URLs."""
-        test_args = ["review", "-m", "flag-model", "-t", "1.9"]
+        test_args = ["review", "-m", "flag-model", "-t", "0.9"]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
             args = parse_arguments()
             self.assertEqual(args.command, "review")
             self.assertEqual(args.model, "flag-model")
-            self.assertEqual(args.temperature, 1.9)
+            self.assertEqual(args.temperature, 0.9)
             self.assertEqual(args.files_or_urls, [])
 
     def test_all_commands_exist(self):
@@ -76,10 +84,10 @@ class TestSqirvyCliArgs(unittest.TestCase):
 
     def test_missing_command(self):
         """Test error when no command is provided."""
-        test_args = ["-m", "some-model"] # No command
+        test_args = ["-m", "some-model"]  # No command
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
             with self.assertRaises(SystemExit):
-                 with patch("argparse.ArgumentParser._print_message"): # Suppress error
+                with patch("argparse.ArgumentParser._print_message"):  # Suppress error
                     parse_arguments()
 
     def test_invalid_command(self):
@@ -87,29 +95,37 @@ class TestSqirvyCliArgs(unittest.TestCase):
         test_args = ["invalid_command", "-m", "some-model"]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
             with self.assertRaises(SystemExit):
-                 with patch("argparse.ArgumentParser._print_message"): # Suppress error
+                with patch("argparse.ArgumentParser._print_message"):  # Suppress error
                     parse_arguments()
 
     def test_temp_edge_cases_with_command(self):
         """Test temperature edge cases with a command."""
-        # Valid edge case: 0.0
-        test_args_zero = ["query", "-t", "0.0"]
-        with patch("sys.argv", ["sqirvy_cli.py"] + test_args_zero):
+        # Valid edge case: slightly above zero (valid min is 0 < temp)
+        test_args_near_zero = ["query", "-t", "0.001"]
+        with patch("sys.argv", ["sqirvy_cli.py"] + test_args_near_zero):
             args = parse_arguments()
             self.assertEqual(args.command, "query")
-            self.assertEqual(args.temperature, 0.0)
+            self.assertEqual(args.temperature, 0.001)
 
-        # Valid edge case: close to 2.0
-        test_args_near_two = ["plan", "-t", "1.999"]
-        with patch("sys.argv", ["sqirvy_cli.py"] + test_args_near_two):
+        # Valid edge case: exactly 1.0 (valid max is temp <= 1.0)
+        test_args_one = ["plan", "-t", "1.0"]
+        with patch("sys.argv", ["sqirvy_cli.py"] + test_args_one):
             args = parse_arguments()
             self.assertEqual(args.command, "plan")
-            self.assertEqual(args.temperature, 1.999)
+            self.assertEqual(args.temperature, 1.0)
 
     def test_invalid_temp_low_with_command(self):
         """Test invalid temperature (too low) with a command."""
+        # Test negative temperature
         test_args = ["code", "-t", "-0.1"]
         with patch("sys.argv", ["sqirvy_cli.py"] + test_args):
+            with self.assertRaises(SystemExit):
+                with patch("argparse.ArgumentParser._print_message"):
+                    parse_arguments()
+                    
+        # Test exactly zero (invalid: requirement is 0 < temp)
+        test_args_zero = ["code", "-t", "0.0"]
+        with patch("sys.argv", ["sqirvy_cli.py"] + test_args_zero):
             with self.assertRaises(SystemExit):
                 with patch("argparse.ArgumentParser._print_message"):
                     parse_arguments()

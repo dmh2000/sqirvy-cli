@@ -2,12 +2,12 @@
 sqirvy: OpenAI Client Implementation
 """
 
-import os
 from langchain_openai import ChatOpenAI
 
 # Assuming client.py is in the same directory
 from .client import Client, Options, DEFAULT_TEMPERATURE_SCALE
 from .query import query_text_langchain
+from .env import get_api_key, get_base_url
 
 # Constants specific to OpenAI if needed, otherwise use defaults from client.py
 OPENAI_TEMP_SCALE = (
@@ -65,34 +65,28 @@ def new_openai_client(model: str) -> OpenAIClient:
     """
     Factory function to create a new OpenAIClient.
 
-    Checks for OPENAI_API_KEY and optionally OPENAI_BASE_URL environment
+    Checks for OPENAI_API_KEY and OPENAI_BASE_URL environment
     variables and initializes the LangChain ChatOpenAI client.
+
+    Args:
+        model: The model identifier to use.
 
     Returns:
         An instance of OpenAIClient.
 
     Raises:
-        ValueError: If the OPENAI_API_KEY environment variable is not set.
-        Exception: If the LangChain client fails to initialize.
+        ValueError: If required environment variables are not set or if client initialization fails.
     """
+    # Get required API credentials
+    provider = "openai"
+    api_key = get_api_key(provider)
+    base_url = get_base_url(provider)
+
     try:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY environment variable not set")
-
-        base_url = os.getenv("OPENAI_BASE_URL")  # Optional base URL
-        if not base_url:
-            raise ValueError("OPENAI_BASE_URL environment variable not set")
-
-        init_args = {"api_key": api_key, "model": model}
-        if base_url:
-            init_args["base_url"] = base_url
-            print(f"Using OpenAI Base URL: {base_url}")  # Info message
-
-        # Pass the api arguments
+        # Initialize the LangChain client
+        init_args = {"api_key": api_key, "model": model, "base_url": base_url}
         llm = ChatOpenAI(**init_args)
-    except ValueError as e:
-        # Catch potential initialization errors from LangChain
+        return OpenAIClient(llm)
+    except Exception as e:
+        # Catch and contextualize initialization errors
         raise ValueError(f"Failed to create LangChain OpenAI client: {e}") from e
-
-    return OpenAIClient(llm)

@@ -12,58 +12,54 @@ import sys
 
 SUPPORTED_COMMANDS = ["query", "plan", "code", "review"]
 
+
 def parse_arguments():
-    """Parses command-line arguments with subcommands."""
-    parser = argparse.ArgumentParser(
-        description="Sqirvy-cli: Interact with LLMs via commands.",
-        epilog="Input is read from stdin. Files/URLs are provided after the command and flags."
-    )
+    """Parse command line arguments in the format:
+    sqirvy_cli <command> <model> <temperature> [filenames..., urls...]
+    """
+    parser = argparse.ArgumentParser(description="Sqirvy CLI - Interact with LLMs")
 
-    # --- Common arguments for all commands ---
+    # Required command positional argument
     parser.add_argument(
-        "-m", "--model",
+        "command",
         type=str,
-        # required=True, # Make model mandatory later if needed
-        help="Specify the LLM model name (e.g., gpt-4o, claude-3-5-sonnet-latest)."
+        choices=SUPPORTED_COMMANDS,
+        help="Command to execute: query, plan, code, or review",
     )
 
-    def check_temperature(value):
-        """Validate temperature range [0.0, 2.0)."""
-        try:
-            fvalue = float(value)
-        except ValueError as e:
-            raise argparse.ArgumentTypeError(f"{value} is not a valid float") from e
-        if not 0.0 <= fvalue < 2.0:
-            raise argparse.ArgumentTypeError(f"{value} is not in the range [0.0, 2.0)")
-        return fvalue
-
+    # Model parameter with short and long form
     parser.add_argument(
-        "-t", "--temperature",
-        type=check_temperature,
-        default=1.0,
-        help="Specify the LLM temperature (float in [0.0, 2.0), default: 1.0)."
+        "-m",
+        "--model",
+        type=str,
+        required=False,
+        default=None,
+        help="Model name to use",
     )
 
-    # --- Subcommands ---
-    subparsers = parser.add_subparsers(dest="command", required=True,
-                                       help="The command to execute.")
+    # Temperature parameter with short and long form
+    parser.add_argument(
+        "-t",
+        "--temperature",
+        type=float,
+        required=False,
+        default=1.0,
+        help="Temperature value (0-1.0)",
+    )
 
-    for command_name in SUPPORTED_COMMANDS:
-        subparser = subparsers.add_parser(
-            command_name,
-            help=f"Execute the '{command_name}' command."
-            # Add specific help/description for each command later if needed
-        )
-        # Add arguments specific to each command here, if any
-        # For now, all commands accept files/URLs
-        subparser.add_argument(
-            'files_or_urls',
-            nargs='*',
-            help='Optional filenames or URLs relevant to the command.'
-        )
+    # Any number of filenames or URLs after the other arguments
+    parser.add_argument(
+        "files_or_urls", nargs="*", help="List of files and/or URLs to process"
+    )
 
     args = parser.parse_args()
+
+    # Validate temperature is in range (0 < temperature <= 1.0)
+    if args.temperature <= 0 or args.temperature > 1.0:
+        parser.error("Temperature must be in range (0..1.0]")
+
     return args
+
 
 def main():
     """Main execution function."""
@@ -79,10 +75,11 @@ def main():
     print(f"Command: {args.command}")
     print(f"Model: {args.model}")
     print(f"Temperature: {args.temperature}")
-    print(f"Files/URLs: {args.files_or_urls}") # This now comes from the subparser
+    print(f"Files/URLs: {args.files_or_urls}")  # This now comes from the subparser
     print("--- Stdin Content ---")
     print(stdin_content if stdin_content else "<empty>")
     print("-------------------")
+
 
 if __name__ == "__main__":
     main()
