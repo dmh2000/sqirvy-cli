@@ -9,9 +9,8 @@ from .models import MODEL_TO_PROVIDER
 
 # Constants matching Go implementation
 MAX_TOKENS_DEFAULT = 4096
-MIN_TEMPERATURE = 0.01
+MIN_TEMPERATURE = 0.0001
 MAX_TEMPERATURE = 1.0
-DEFAULT_TEMPERATURE_SCALE = 2.0  # Default scaling factor (like OpenAI, Llama)
 
 
 class Options:
@@ -30,38 +29,22 @@ class Options:
         self,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
-        temperature_scale: Optional[float] = None,
     ):
         # Set default temperature if not provided
         temp_value = temperature if temperature is not None else MIN_TEMPERATURE
-        
-        # Validate temperature is within range
-        if not MIN_TEMPERATURE <= temp_value <= MAX_TEMPERATURE:
-            raise ValueError(
-                f"Temperature must be between {MIN_TEMPERATURE} and {MAX_TEMPERATURE}, got {temp_value}"
-            )
-        
+
         # Set validated temperature
         self.temperature = temp_value
-        
+
         # Set max_tokens with default if needed
         self.max_tokens = (
             max_tokens
             if max_tokens is not None and max_tokens > 0
             else MAX_TOKENS_DEFAULT
         )
-        
-        # Set temperature_scale with default if needed
-        self.temperature_scale = (
-            temperature_scale
-            if temperature_scale is not None
-            else DEFAULT_TEMPERATURE_SCALE
-        )
 
     def __repr__(self):
-        return f"Options(temperature={self.temperature}, \
-        max_tokens={self.max_tokens}, \
-        temperature_scale={self.temperature_scale})"
+        return f"Options(temperature={self.temperature}, max_tokens={self.max_tokens}"
 
 
 # --- Client Interface ---
@@ -122,10 +105,10 @@ def new_client(model: str) -> Optional[Client]:
         Exception: If client creation fails for other reasons (e.g., missing API key).
     """
 
-    from .gemini_client import new_gemini_client  # pylint: disable=cyclic-import
-    from .anthropic_client import new_anthropic_client  # pylint: disable=cyclic-import
-    from .openai_client import new_openai_client  # pylint: disable=cyclic-import
-    from .llama_client import new_llama_client  # pylint: disable=cyclic-import
+    from .gemini_client import new_gemini_client
+    from .anthropic_client import new_anthropic_client
+    from .openai_client import new_openai_client
+    from .llama_client import new_llama_client
 
     provider = MODEL_TO_PROVIDER[model]
     provider = provider.lower()  # Ensure case-insensitivity

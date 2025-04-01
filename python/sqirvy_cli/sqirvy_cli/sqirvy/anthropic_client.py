@@ -49,15 +49,6 @@ class AnthropicClient(Client):
             ValueError: If prompts list is empty or temperature is out of range.
             Exception: Errors from the LangChain API call.
         """
-        # Ensure the correct temperature scale is used for Anthropic
-        if options.temperature_scale is None:
-            options.temperature_scale = ANTHROPIC_TEMP_SCALE
-        elif options.temperature_scale != ANTHROPIC_TEMP_SCALE:
-            # Optionally warn or raise if a different scale is explicitly provided
-            print(
-                f"Warning: Overriding anthropic temperature_scale ({options.temperature_scale}) "
-            )
-            options.temperature_scale = ANTHROPIC_TEMP_SCALE
 
         # Delegate to the common LangChain query function
         return query_text_langchain(self.llm, system, prompts, options)

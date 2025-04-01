@@ -43,3 +43,45 @@ in file python/sqirvy-cli/sqirvy/client.py, create a function named NewClient th
 in file python/sqirvy-cli/sqirvy/anthropic.py, create a function NewAnthropicClient that is similar to the same function in go/pkg/sqirvy/anthropic.go. It will create an instance of interface Client that checks for the anthropic api key from the environment, then creates an insance of the LangChain anthropic object. import the LangChain package for the anthropic llm as weel as any other imports required. 
 
 refactor python/sqirvy-cli/sqirvy/anthropic_client.py to use the native anthropic SDK instead of langchain. change only this file, do not change any other files. in the QuertyText function, do not call QueryTextLangchain, instead use the anthropic sdk to make send the query directly.
+
+- modify python/sqirvy_cli/sqirvy_cli/main.py so it behaves as follows:
+  - "sqirvy_cli <command> <flags..> <filenames, urls>
+  - where the commands are:
+    - "query"
+    - "plan"
+    - "code"
+    - "review"
+  - the command name comes first, then the flags (if any) and file/url arguments (if any)
+- update python/sqirvy_cli/sqirvy_cli/test_cli.py as needed
+  
+
+in python/sqirvy-cli/sqirvy_cli/main.py, update the "parse_arguments" function to accept command line arguments in the following order:
+"sqirvy_cli <command> <model> <temperature> [filenames..., urls...]"
+- <command> 
+   - command is a string that has only one of the following values:
+   - query
+   - plan
+   - code
+   - review
+- <model>
+  - -m "modelname"
+  - --mode "modelname"
+- <temperature>
+  - -t n             (where n is a floating point value in the range (0..1.0]
+  - --temperature n  (where n is a floating point value in the range (0..1.0]
+- any number of filenames and urls after all other arguments
+
+
+create a new file, python/sqirvy_cli/sqirvy_cli/test_args.sh. this file will be a bash script. on each   line of the script it will run main.py with various combinations of arguments and print the output. it  does not need to validate the output. include instances where main.py gets input from stdin using "echo  hello from stdin". create as many tests as needed to cover most combinations of arguments.   
+
+create a new file python/sqirvy-cli/sqirvy-cli/context.py. in this file, add a python dataclass 'Context' that has the following fields:
+- command (string)
+- model (string)
+- temperature (float)
+- files (list of strings)
+- system (string)
+- prompt (string)
+add a function that constructs an instance of the context dataclass. the function will take parameters for each field and initialize it
+
+
+

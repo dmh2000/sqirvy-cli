@@ -9,6 +9,10 @@ Prints the parsed arguments and stdin content to stdout.
 
 import argparse
 import sys
+from .context import create_context
+
+# from .sqirvy.client import new_client
+
 
 SUPPORTED_COMMANDS = ["query", "plan", "code", "review"]
 
@@ -70,15 +74,20 @@ def main():
     if not sys.stdin.isatty():
         stdin_content = sys.stdin.read()
 
-    # Print collected information (adjust as needed for actual execution)
-    print("--- Arguments ---")
-    print(f"Command: {args.command}")
-    print(f"Model: {args.model}")
-    print(f"Temperature: {args.temperature}")
-    print(f"Files/URLs: {args.files_or_urls}")  # This now comes from the subparser
-    print("--- Stdin Content ---")
-    print(stdin_content if stdin_content else "<empty>")
-    print("-------------------")
+    # Create a context object with the parsed arguments
+    # For now, use placeholders for provider, system and prompt
+    context = create_context(
+        command=args.command,
+        model=args.model,
+        temperature=args.temperature,
+        files=args.files_or_urls,
+        prompt=stdin_content,
+    )
+
+    # Print the context information
+    context.print()
+
+    # client = new_client(context.model)
 
 
 if __name__ == "__main__":
