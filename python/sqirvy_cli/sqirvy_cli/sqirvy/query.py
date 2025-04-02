@@ -12,17 +12,14 @@ from .client import (
     MAX_TEMPERATURE,
     MAX_TOKENS_DEFAULT,
     MIN_TEMPERATURE,
-    DEFAULT_TEMPERATURE_SCALE,
     Options,
 )
-
+from .context import Context
 
 # --- LangChain Query Helper Function ---
 
 
-def query_text_langchain(
-    llm: BaseChatModel, system: str, prompts: List[str], options: Options
-) -> str:
+def query_text_langchain(llm: BaseChatModel, context: Context) -> str:
     """
     Helper function to execute a text query using a LangChain chat model.
 
@@ -40,14 +37,14 @@ def query_text_langchain(
         ValueError: If prompts list is empty.
         Exception: Errors from the LangChain API call.
     """
-    if not prompts:
+    if len(context.prompts) == 0:
         raise ValueError("Prompts list cannot be empty for text query.")
-        
+
     # Note: Temperature validation is now handled in the Options constructor
 
     # Construct messages
-    messages = [SystemMessage(content=system)]
-    for p in prompts:
+    messages = [SystemMessage(content=context.system)]
+    for p in context.prompts:
         messages.append(HumanMessage(content=p))
 
     # Prepare LangChain options

@@ -10,6 +10,7 @@ from langchain_anthropic import ChatAnthropic
 from .client import Client, Options
 from .query import query_text_langchain
 from .env import get_api_key, get_base_url
+from .context import Context
 
 
 # Constants matching Go implementation
@@ -30,7 +31,7 @@ class AnthropicClient(Client):
         """
         self.llm = llm
 
-    def query_text(self, system: str, prompts: list[str], options: Options) -> str:
+    def query_text(self, context: Context) -> str:
         """
         Sends a text query to the specified Anthropic model using LangChain.
 
@@ -51,7 +52,7 @@ class AnthropicClient(Client):
         """
 
         # Delegate to the common LangChain query function
-        return query_text_langchain(self.llm, system, prompts, options)
+        return query_text_langchain(self.llm, context)
 
     def close(self):
         """
@@ -60,30 +61,17 @@ class AnthropicClient(Client):
         # The LangChain client doesn't typically require explicit closing.
 
 
-def new_anthropic_client(model: str) -> AnthropicClient:
+def new_anthropic_client(context: Context) -> AnthropicClient:
     """
     Factory function to create a new AnthropicClient.
-
-    Checks for the ANTHROPIC_API_KEY environment variable and initializes
-    the LangChain ChatAnthropic client.
-
-    Args:
-        model: The model identifier to use.
-
-    Returns:
-        An instance of AnthropicClient.
-
-    Raises:
-        ValueError: If required environment variables are not set or if client initialization fails.
     """
     # Get required API credentials
-    provider = "anthropic"
-    api_key = get_api_key(provider)
-    base_url = get_base_url(provider, default="https://api.anthropic.com")
+    api_key = get_api_key(context.provider)
+    base_url = get_base_url(context.provider, default="https://api.anthropic.com")
 
     try:
         # Initialize the LangChain client
-        llm = ChatAnthropic(model=model, api_key=api_key, base_url=base_url)
+        llm = ChatAnthropic(model=context.model, api_key=api_key, base_url=base_url)
         return AnthropicClient(llm)
     except Exception as e:
         # Catch and contextualize initialization errors

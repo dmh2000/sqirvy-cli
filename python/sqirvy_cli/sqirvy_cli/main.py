@@ -9,9 +9,8 @@ Prints the parsed arguments and stdin content to stdout.
 
 import argparse
 import sys
-from .context import create_context
-
-# from .sqirvy.client import new_client
+from sqirvy.context import create_context
+from sqirvy.client import new_client
 
 
 SUPPORTED_COMMANDS = ["query", "plan", "code", "review"]
@@ -85,9 +84,13 @@ def main():
     )
 
     # Print the context information
-    context.print()
+    # context.print()
 
-    # client = new_client(context.model)
+    client = new_client(context)
+
+    # execute the query
+    response = client.query_text(context)
+    print(response)
 
 
 if __name__ == "__main__":

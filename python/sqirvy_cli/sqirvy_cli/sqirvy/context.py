@@ -7,15 +7,16 @@ This module defines the Context dataclass that encapsulates all information need
 for executing a sqirvy command.
 """
 import sys
+import os
 from dataclasses import dataclass
 from typing import List, Optional
-from .sqirvy.models import get_provider_name, get_model_alias
+from sqirvy.models import get_provider_name, get_model_alias
 
 system_prompts = {
-    "query": "prompts/query.txt",
-    "plan": "prompts/plan.txt",
-    "code": "prompts/code.txt",
-    "review": "prompts/review.txt",
+    "query": "prompts/query.md",
+    "plan": "prompts/plan.md",
+    "code": "prompts/code.md",
+    "review": "prompts/review.md",
 }
 
 
@@ -43,7 +44,7 @@ class Context:
     temperature: float
     files: List[str]
     system: str
-    prompt: str
+    prompts: List[str]
 
     def print(self):
         """Print the contents of the context in a readable format."""
@@ -53,7 +54,7 @@ class Context:
         print(f"Temperature : {self.temperature}")
         print(f"Files/URLs  : {self.files}")
         print(f"System      : {self.system}")
-        print(f"Prompt      : {self.prompt if self.prompt else '<empty>'}")
+        print(f"Messages    : {len(self.prompts)}")
 
 
 def create_context(
@@ -79,12 +80,13 @@ def create_context(
         A new Context instance with the provided values.
     """
 
-    from .main import SUPPORTED_COMMANDS
+    from main import SUPPORTED_COMMANDS
 
     if files is None:
         files = []
 
     # get the system prompt based on the command provided
+    p = os.getcwd()
     system_file = system_prompts.get(command)
     if system_file:
         try:
@@ -110,24 +112,6 @@ def create_context(
         sys.exit(1)
     model = get_model_alias(model)
 
-    # validate the temperature
-    if temperature <= 0 or temperature > 1.0:
-        print("Temperature must be in range (0..1.0]")
-        sys.exit(1)
-    # validate the prompt
-    if not prompt or prompt == "":
-        prompt = "hello world"
-
-    # validate the files
-    prompts = []
-    for file in files:
-        try:
-            with open(file, "r", encoding="ascii") as f:
-                prompts.append(f.read())
-        except FileNotFoundError:
-            print(f"File '{file}' not found.")
-            sys.exit(1)
-
     # validate the provider
     if not get_provider_name(model):
         print(
@@ -137,6 +121,26 @@ def create_context(
     # get the provider based on the model
     provider = get_provider_name(model)
 
+    # validate the temperature
+    if temperature <= 0 or temperature > 1.0:
+        print("Temperature must be in range (0..1.0]")
+        sys.exit(1)
+    # validate the prompt
+    if not prompt or prompt == "":
+        prompt = "hello world"
+
+    # populate the prompts
+    prompts = []
+    prompts.append(prompt)
+    for file in files:
+        try:
+            with open(file, "r", encoding="ascii") as f:
+                p = f.read()
+                prompts.append(p)
+        except FileNotFoundError:
+            print(f"File '{file}' not found.")
+            sys.exit(1)
+
     return Context(
         command=command,
         model=model,
@@ -144,5 +148,5 @@ def create_context(
         temperature=temperature,
         files=files,
         system=system_prompt,
-        prompt=prompt,
+        prompts=prompts,
     )

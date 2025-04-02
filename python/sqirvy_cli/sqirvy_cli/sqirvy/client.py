@@ -5,7 +5,8 @@ Abstract base class and factory function for AI client implementations.
 from abc import ABC, abstractmethod
 from typing import List, Optional  # Added Optional, Union, Dict, List
 
-from .models import MODEL_TO_PROVIDER
+from .models import get_provider_name
+from .context import Context
 
 # Constants matching Go implementation
 MAX_TOKENS_DEFAULT = 4096
@@ -18,11 +19,8 @@ class Options:
     Configuration options for AI client queries.
 
     Attributes:
-        temperature: Controls randomness (0-100). Defaults to MIN_TEMPERATURE if None.
+        temperature: Controls randomness (0-1.0). Defaults to 0.5 if None.
         max_tokens: Maximum response tokens. Defaults to MAX_TOKENS_DEFAULT if None or 0.
-        temperature_scale: Provider-specific scaling factor for temperature
-        e.g., 1.0 for Anthropic, 2.0 for OpenAI.
-        Defaults to DEFAULT_TEMPERATURE_SCALE if None.
     """
 
     def __init__(
@@ -31,7 +29,7 @@ class Options:
         max_tokens: Optional[int] = None,
     ):
         # Set default temperature if not provided
-        temp_value = temperature if temperature is not None else MIN_TEMPERATURE
+        temp_value = temperature if temperature is not None else MAX_TEMPERATURE / 2.0
 
         # Set validated temperature
         self.temperature = temp_value
@@ -57,7 +55,7 @@ class Client(ABC):
     """
 
     @abstractmethod
-    def query_text(self, system: str, prompts: List[str], options: Options) -> str:
+    def query_text(self, context) -> str:
         """
         Sends a text query to the specified model and returns the response.
 
@@ -90,7 +88,7 @@ class Client(ABC):
 # --- Factory Function ---
 
 
-def new_client(model: str) -> Optional[Client]:
+def new_client(context: Context) -> Optional[Client]:
     """
     Factory function to create a new AI client based on the specified provider.
 
@@ -110,25 +108,23 @@ def new_client(model: str) -> Optional[Client]:
     from .openai_client import new_openai_client
     from .llama_client import new_llama_client
 
-    provider = MODEL_TO_PROVIDER[model]
-    provider = provider.lower()  # Ensure case-insensitivity
-
     # Import functions here to avoid potential circular dependencies at module level
     # and ensure they are defined before being called.
+    context.provider = get_provider_name(context.model)
     try:
-        if provider == "gemini":
-            return new_gemini_client(model)
-        if provider == "anthropic":
-            return new_anthropic_client(model)
-        if provider == "openai":
-            return new_openai_client(model)
-        if provider == "llama":
-            return new_llama_client(model)
-        raise ValueError(f"Unsupported provider: {provider}")
+        if context.provider == "gemini":
+            return new_gemini_client(context)
+        if context.provider == "anthropic":
+            return new_anthropic_client(context)
+        if context.provider == "openai":
+            return new_openai_client(context)
+        if context.provider == "llama":
+            return new_llama_client(context)
+        raise ValueError(f"Unsupported provider: {context.provider}")
     except ImportError as e:
         # Handle cases where the specific client module might be missing or has issues
         raise ImportError(
-            f"Could not import client module for provider '{provider}': {e}"
+            f"Could not import client module for provider '{context.provider}': {e}"
         ) from e
     except Exception as e:
         # Catch errors during client instantiation (e.g., missing keys handled in specific New*Client funcs)
