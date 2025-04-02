@@ -11,13 +11,23 @@ import os
 from dataclasses import dataclass
 from typing import List, Optional
 from sqirvy.models import get_provider_name, get_model_alias
+from sqirvy.prompts import code_prompt, plan_prompt, query_prompt, review_prompt
 
 system_prompts = {
-    "query": "prompts/query.md",
-    "plan": "prompts/plan.md",
-    "code": "prompts/code.md",
-    "review": "prompts/review.md",
+    "query": query_prompt,
+    "plan": plan_prompt,
+    "code": code_prompt,
+    "review": review_prompt,
 }
+
+
+SUPPORTED_COMMANDS = [
+    "query",
+    "plan",
+    "code",
+    "review",
+    "help",
+]
 
 
 @dataclass
@@ -80,31 +90,17 @@ def create_context(
         A new Context instance with the provided values.
     """
 
-    from main import SUPPORTED_COMMANDS
-
     if files is None:
         files = []
 
     # get the system prompt based on the command provided
-    p = os.getcwd()
-    system_file = system_prompts.get(command)
-    if system_file:
-        try:
-            with open(system_file, "r", encoding="ascii") as f:
-                system_prompt = f.read()
-        except FileNotFoundError:
-            print(f"System prompt file '{system_file}' not found.")
-            sys.exit(1)
-    else:
-        print(f"Unsupported command: {command}")
-        sys.exit(1)
-
     # validate the command
     if command not in SUPPORTED_COMMANDS:
         print(
             f"Invalid command: {command}. Supported commands are: {SUPPORTED_COMMANDS}"
         )
         sys.exit(1)
+    system_prompt = system_prompts.get(command)
 
     # validate the model
     if not model:
@@ -112,12 +108,6 @@ def create_context(
         sys.exit(1)
     model = get_model_alias(model)
 
-    # validate the provider
-    if not get_provider_name(model):
-        print(
-            f"Invalid model: {model}. Supported models are: {list(get_provider_name)}"
-        )
-        sys.exit(1)
     # get the provider based on the model
     provider = get_provider_name(model)
 
@@ -134,12 +124,16 @@ def create_context(
     prompts.append(prompt)
     for file in files:
         try:
-            with open(file, "r", encoding="ascii") as f:
+            # check if file exists and is a file
+            if not os.path.isfile(file):
+                print(f"File '{file}' does not exist or is not a file.")
+                raise FileNotFoundError
+            with open(file, "r", encoding="utf-8") as f:
                 p = f.read()
                 prompts.append(p)
         except FileNotFoundError:
             print(f"File '{file}' not found.")
-            sys.exit(1)
+            raise
 
     return Context(
         command=command,

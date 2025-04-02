@@ -9,24 +9,26 @@ Prints the parsed arguments and stdin content to stdout.
 
 import argparse
 import sys
-from sqirvy.context import create_context
+from sqirvy.context import create_context, SUPPORTED_COMMANDS
 from sqirvy.client import new_client
-
-
-SUPPORTED_COMMANDS = ["query", "plan", "code", "review"]
 
 
 def parse_arguments():
     """Parse command line arguments in the format:
     sqirvy_cli <command> <model> <temperature> [filenames..., urls...]
     """
-    parser = argparse.ArgumentParser(description="Sqirvy CLI - Interact with LLMs")
+    parser = argparse.ArgumentParser(
+        description="Sqirvy CLI - Interact with LLMs", add_help=False
+    )
 
     # Required command positional argument
     parser.add_argument(
-        "command",
-        type=str,
+        "-c",
+        "--command",
+        required=False,
         choices=SUPPORTED_COMMANDS,
+        type=str,
+        default="help",
         help="Command to execute: query, plan, code, or review",
     )
 
@@ -64,9 +66,36 @@ def parse_arguments():
     return args
 
 
+command_help = {
+    "query": "Query the LLM with a prompt",
+    "plan": "Plan a task using the LLM",
+    "code": "Generate code snippets with the LLM",
+    "review": "Review code or text with the LLM",
+    "help": "Show this help message",
+}
+
+
+def print_help():
+    """Print the help message."""
+    print("Sqirvy CLI - Command Line Interface for LLMs")
+    print("Usage: sqirvy_cli <command> [options] [filenames... urls...]")
+    print("Commands:")
+    print("Options:")
+    print("  -c | --command    Command To Execute")
+    for cmd in SUPPORTED_COMMANDS:
+        print(f"       {cmd} : {command_help[cmd]}")
+    print("  -m, --model       Model name to use (default: None)")
+    print("  -t, --temperature Temperature value (0-1.0) (default: 1.0)")
+    print("  filenames...      List of files and/or URLs to process")
+
+
 def main():
     """Main execution function."""
     args = parse_arguments()
+
+    if args.command == "help":
+        print_help()
+        sys.exit(0)
 
     # Read from stdin only if it's not connected to a TTY (i.e., piped/redirected)
     stdin_content = ""

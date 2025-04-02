@@ -102,21 +102,12 @@ def get_model_provider_list() -> List[ModelProviderInfo]:
 def get_provider_name(model: str) -> str:
     """
     Returns the provider name for a given model identifier.
-
-    Args:
-        model: The model name (string).
-
-    Returns:
-        The provider name (string).
-
-    Raises:
-        ValueError: If the model is not recognized.
     """
     resolved_model = get_model_alias(model)
-    prv = MODEL_TO_PROVIDER.get(resolved_model)
-    if prv:
-        return prv
-    raise ValueError(f"Unrecognized model: {model}")
+    provider = MODEL_TO_PROVIDER.get(resolved_model)
+    if provider:
+        return provider
+    raise ValueError(f"Unrecognized provider: {resolved_model}:{provider}")
 
 
 def get_max_tokens(model: str) -> int:
