@@ -5,7 +5,7 @@ Contains model-to-provider mappings, token limits, and utility functions
 for working with different AI models across supported providers.
 """
 
-from typing import List, Dict, NamedTuple
+from typing import List, Dict, NamedTuple, Tuple
 
 # --- Constants ---
 
@@ -125,6 +125,41 @@ def get_max_tokens(model: str) -> int:
     return MODEL_TO_MAX_TOKENS.get(resolved_model, MAX_TOKENS_DEFAULT)
 
 
+def get_providers_with_models() -> List[Tuple[str, List[str]]]:
+    """
+    Creates a list of providers with their supported models.
+
+    Returns:
+        A list of tuples where each tuple contains:
+        - Provider name (string)
+        - List of model names (strings) supported by that provider
+    """
+    providers_dict = {}
+
+    # Group models by provider
+    for model, provider in MODEL_TO_PROVIDER.items():
+        if provider not in providers_dict:
+            providers_dict[provider] = []
+        providers_dict[provider].append(model)
+
+    # Convert dictionary to list of tuples
+    return [(provider, sorted(models)) for provider, models in providers_dict.items()]
+
+
+def print_providers_with_models() -> None:
+    """
+    Prints a formatted list of providers with their supported models.
+    Each provider is displayed with all models it supports in an indented list.
+    """
+    providers_models = get_providers_with_models()
+
+    print("   --- Available Models ---")
+    for provider, models in providers_models:
+        print(f"   {provider}")
+        for model in models:
+            print(f"     - {model}")
+
+
 # --- Example Usage (optional) ---
 if __name__ == "__main__":
     print("--- Supported Models ---")
@@ -155,3 +190,5 @@ if __name__ == "__main__":
             )
         except ValueError as e:
             print(f"Model: {m:<20} Error: {e}")
+
+    print_providers_with_models()

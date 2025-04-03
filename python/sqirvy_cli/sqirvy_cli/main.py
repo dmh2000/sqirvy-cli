@@ -11,6 +11,7 @@ import argparse
 import sys
 from sqirvy.context import create_context, SUPPORTED_COMMANDS
 from sqirvy.client import new_client
+from sqirvy.models import print_providers_with_models
 
 
 def parse_arguments():
@@ -87,6 +88,7 @@ def print_help():
     print("  -m, --model       Model name to use (default: None)")
     print("  -t, --temperature Temperature value (0-1.0) (default: 1.0)")
     print("  filenames...      List of files and/or URLs to process")
+    print_providers_with_models()
 
 
 def main():
