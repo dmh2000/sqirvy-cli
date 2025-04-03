@@ -21,6 +21,14 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         description="Sqirvy CLI - Interact with LLMs", add_help=False
     )
+    
+    # Help arguments
+    parser.add_argument(
+        "-h",
+        "--help",
+        action="store_true",
+        help="Show help message and exit",
+    )
 
     # Required command positional argument
     parser.add_argument(
@@ -29,7 +37,7 @@ def parse_arguments():
         required=False,
         choices=SUPPORTED_COMMANDS,
         type=str,
-        default="help",
+        default="query",
         help="Command to execute: query, plan, code, or review",
     )
 
@@ -59,11 +67,7 @@ def parse_arguments():
     )
 
     args = parser.parse_args()
-
-    # Validate temperature is in range (0 < temperature <= 1.0)
-    if args.temperature <= 0 or args.temperature > 1.0:
-        parser.error("Temperature must be in range (0..1.0]")
-
+    
     return args
 
 
@@ -79,10 +83,10 @@ command_help = {
 def print_help():
     """Print the help message."""
     print("Sqirvy CLI - Command Line Interface for LLMs")
-    print("Usage: sqirvy_cli <command> [options] [filenames... urls...]")
-    print("Commands:")
+    print("Usage: sqirvy_cli [options] [filenames... urls...]")
     print("Options:")
-    print("  -c | --command    Command To Execute")
+    print("  -h, --help        Show this help message and exit")
+    print("  -c, --command     Command To Execute")
     for cmd in SUPPORTED_COMMANDS:
         print(f"       {cmd} : {command_help[cmd]}")
     print("  -m, --model       Model name to use (default: None)")
@@ -95,33 +99,48 @@ def main():
     """Main execution function."""
     args = parse_arguments()
 
-    if args.command == "help":
+    # Check for help flag first
+    if args.help:
         print_help()
         sys.exit(0)
+        
+    # Check if model is provided
+    if not args.model:
+        print_help()
+        print("\nError: Model is required")
+        sys.exit(1)
 
     # Read from stdin only if it's not connected to a TTY (i.e., piped/redirected)
     stdin_content = ""
     if not sys.stdin.isatty():
         stdin_content = sys.stdin.read()
 
-    # Create a context object with the parsed arguments
-    # For now, use placeholders for provider, system and prompt
-    context = create_context(
-        command=args.command,
-        model=args.model,
-        temperature=args.temperature,
-        files=args.files_or_urls,
-        prompt=stdin_content,
-    )
-
-    # Print the context information
-    # context.print()
-
-    client = new_client(context)
-
-    # execute the query
-    response = client.query_text(context)
-    print(response)
+    try:
+        # Create a context object with the parsed arguments
+        context = create_context(
+            command=args.command,
+            model=args.model,
+            temperature=args.temperature,
+            files=args.files_or_urls,
+            prompt=stdin_content,
+        )
+        
+        # Create client and execute the query
+        client = new_client(context)
+        response = client.query_text(context)
+        print(response)
+    except ValueError as e:
+        print_help()
+        print(f"\nError: {str(e)}")
+        sys.exit(1)
+    except FileNotFoundError as e:
+        print_help()
+        print(f"\nError: {str(e)}")
+        sys.exit(1)
+    except Exception as e:
+        print_help()
+        print(f"\nUnexpected error: {str(e)}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

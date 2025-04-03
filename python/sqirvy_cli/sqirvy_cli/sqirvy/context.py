@@ -26,7 +26,6 @@ SUPPORTED_COMMANDS = [
     "plan",
     "code",
     "review",
-    "help",
 ]
 
 
@@ -96,16 +95,12 @@ def create_context(
     # get the system prompt based on the command provided
     # validate the command
     if command not in SUPPORTED_COMMANDS:
-        print(
-            f"Invalid command: {command}. Supported commands are: {SUPPORTED_COMMANDS}"
-        )
-        sys.exit(1)
+        raise ValueError(f"Invalid command: {command}. Supported commands are: {SUPPORTED_COMMANDS}")
     system_prompt = system_prompts.get(command)
 
     # validate the model
     if not model:
-        print("Model is required.")
-        sys.exit(1)
+        raise ValueError("Model is required.")
     model = get_model_alias(model)
 
     # get the provider based on the model
@@ -113,8 +108,7 @@ def create_context(
 
     # validate the temperature
     if temperature <= 0 or temperature > 1.0:
-        print("Temperature must be in range (0..1.0]")
-        sys.exit(1)
+        raise ValueError("Temperature must be in range (0..1.0]")
     # validate the prompt
     if not prompt or prompt == "":
         prompt = "hello world"
