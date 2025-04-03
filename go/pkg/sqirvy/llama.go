@@ -14,16 +14,12 @@ import (
 	"github.com/tmc/langchaingo/llms/openai"
 )
 
-const (
-	// LlamaTempScale is the scaling factor for Llama's 0-2 temperature range
-	LlamaTempScale = 2.0
-)
-
 // LlamaClient implements the Client interface for Meta's Llama models.
 // It provides methods for querying Llama language models through
 // an OpenAI-compatible interface.
 type LlamaClient struct {
-	llm llms.Model // OpenAI-compatible LLM client
+	llm              llms.Model // OpenAI-compatible LLM client
+	temperatureScale float32
 }
 
 // Ensure LlamaClient implements the Client interface
@@ -51,13 +47,17 @@ func NewLlamaClient() (*LlamaClient, error) {
 	}
 
 	return &LlamaClient{
-		llm: llm,
+		llm:              llm,
+		temperatureScale: 1.0, // Default temperature scale for Llama
 	}, nil
 }
 
 // LlamaClient.QueryText implements the QueryText method for the Client interface.
 // It sends a text query to Meta's Llama models and returns the generated text response.
 func (c *LlamaClient) QueryText(ctx context.Context, system string, prompts []string, model string, options Options) (string, error) {
+	// scale the temperature
+	options.Temperature = options.Temperature * c.temperatureScale
+
 	return QueryTextLangChain(ctx, c.llm, system, prompts, model, options)
 }
 

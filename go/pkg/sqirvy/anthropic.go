@@ -18,7 +18,8 @@ import (
 // It provides methods for querying Anthropic's language models through
 // the langchaingo library.
 type AnthropicClient struct {
-	llm llms.Model // langchaingo LLM client
+	llm              llms.Model // langchaingo LLM client
+	temperatureScale float32
 }
 
 // Ensure AnthropicClient implements the Client interface
@@ -39,15 +40,16 @@ func NewAnthropicClient() (*AnthropicClient, error) {
 	}
 
 	return &AnthropicClient{
-		llm: llm,
+		llm:              llm,
+		temperatureScale: 1.0, // Default temperature scale for Anthropic
 	}, nil
 }
 
 // QueryText sends a text query to the specified Anthropic model using langchaingo
 // and returns the response.
 func (c *AnthropicClient) QueryText(ctx context.Context, system string, prompts []string, model string, options Options) (string, error) {
-	// langchaingo's anthropic client expects temperature 0.0-1.0
-	// QueryTextLangChain handles the 0-100 to 0-1 scaling
+	// scale the temperature
+	options.Temperature = options.Temperature * c.temperatureScale
 	return QueryTextLangChain(ctx, c.llm, system, prompts, model, options)
 }
 

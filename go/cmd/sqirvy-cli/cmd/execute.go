@@ -37,7 +37,7 @@ func executeQuery(cmd *cobra.Command, system string, args []string) (string, err
 	fmt.Fprintln(os.Stderr, "Using model :", model)
 
 	// Extract temperature setting from command flags
-	temperature, err := cmd.Flags().GetInt("temperature")
+	temperature, err := cmd.Flags().GetFloat32("temperature")
 	if err != nil {
 		return "", fmt.Errorf("error: getting temperature: %v", err)
 	}

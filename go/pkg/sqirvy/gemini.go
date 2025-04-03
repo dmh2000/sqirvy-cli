@@ -18,7 +18,8 @@ import (
 // It provides methods for querying Google's Gemini language models through
 // the langchaingo library.
 type GeminiClient struct {
-	llm llms.Model // langchaingo LLM client
+	llm              llms.Model // langchaingo LLM client
+	temperatureScale float32
 }
 
 // Ensure GeminiClient implements the Client interface
@@ -39,17 +40,15 @@ func NewGeminiClient() (*GeminiClient, error) {
 	}
 
 	return &GeminiClient{
-		llm: llm,
+		llm:              llm,
+		temperatureScale: 2.0, // Default temperature scale for Gemini
 	}, nil
 }
 
 // QueryText sends a text query to the specified Gemini model using langchaingo
 // and returns the response.
 func (c *GeminiClient) QueryText(ctx context.Context, system string, prompts []string, model string, options Options) (string, error) {
-	// langchaingo's googleai client expects temperature 0.0-1.0
-	// QueryTextLangChain handles the 0-100 to 0-1 scaling
-	// Note: Gemini via langchaingo might use a different temp scale (e.g., 0-1), adjust TemperatureScale in Options if needed.
-	// For now, rely on the default scaling in QueryTextLangChain.
+	options.Temperature = options.Temperature * c.temperatureScale
 	return QueryTextLangChain(ctx, c.llm, system, prompts, model, options)
 }
 

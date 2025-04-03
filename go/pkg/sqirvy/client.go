@@ -94,20 +94,6 @@ func QueryTextLangChain(ctx context.Context, llm llms.Model, system string, prom
 		return "", fmt.Errorf("prompts cannot be empty for text query")
 	}
 
-	// Set default and validate temperature
-	if options.Temperature < MIN_TEMPERATURE {
-		options.Temperature = MIN_TEMPERATURE
-	}
-	if options.Temperature > MAX_TEMPERATURE {
-		return "", fmt.Errorf("temperature must be between %.1f and %.1f", MIN_TEMPERATURE, MAX_TEMPERATURE)
-	}
-	// Scale temperature based on provider expectations (0-1 for Anthropic, 0-2 for others using langchaingo currently)
-	// TODO: Make this scaling more robust, perhaps based on the llm type or provider name.
-	if options.TemperatureScale == 0 {
-		options.TemperatureScale = TempScale
-	}
-	options.Temperature = (options.Temperature * options.TemperatureScale) / MAX_TEMPERATURE
-
 	// system prompt
 	content := []llms.MessageContent{
 		llms.TextParts(llms.ChatMessageTypeSystem, system),

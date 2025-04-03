@@ -15,7 +15,7 @@ var cfgFile string
 var defaultPrompt = "Hello"
 
 const defaultModel = "gpt-4-turbo"
-const defaultTemperature = 50
+const defaultTemperature = 0.5
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -58,7 +58,7 @@ func init() {
 	viper.BindPFlag("default-prompt", rootCmd.PersistentFlags().Lookup("default-prompt"))
 	rootCmd.PersistentFlags().StringP("model", "m", defaultModel, "LLM model to use")
 	viper.BindPFlag("model", rootCmd.PersistentFlags().Lookup("model"))
-	rootCmd.PersistentFlags().IntP("temperature", "t", defaultTemperature, "LLM temperature to use (0..100)")
+	rootCmd.PersistentFlags().Float32P("temperature", "t", defaultTemperature, "LLM temperature to use (0..1)")
 }
 
 // print config filename only once

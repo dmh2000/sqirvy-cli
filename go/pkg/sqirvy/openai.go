@@ -14,16 +14,12 @@ import (
 	"github.com/tmc/langchaingo/llms/openai"
 )
 
-const (
-	// OpenAITempScale is the scaling factor for OpenAI's 0-2 temperature range
-	OpenAITempScale = 2.0
-)
-
 // OpenAIClient implements the Client interface for Meta's OpenAI models.
 // It provides methods for querying OpenAI language models through
 // an OpenAI-compatible interface.
 type OpenAIClient struct {
-	llm llms.Model // OpenAI-compatible LLM client
+	llm              llms.Model // OpenAI-compatible LLM client
+	temperatureScale float32
 }
 
 // Ensure OpenAIClient implements the Client interface
@@ -51,13 +47,16 @@ func NewOpenAIClient() (*OpenAIClient, error) {
 	}
 
 	return &OpenAIClient{
-		llm: llm,
+		llm:              llm,
+		temperatureScale: 2.0, // Default temperature scale for OpenAI
 	}, nil
 }
 
 // OpenAIClient.QueryText implements the QueryText method for the Client interface.
 // It sends a text query to Meta's OpenAI models and returns the generated text response.
 func (c *OpenAIClient) QueryText(ctx context.Context, system string, prompts []string, model string, options Options) (string, error) {
+	// scale the temperature
+	options.Temperature = options.Temperature * c.temperatureScale
 	return QueryTextLangChain(ctx, c.llm, system, prompts, model, options)
 }
 
