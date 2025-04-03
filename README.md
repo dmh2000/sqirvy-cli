@@ -31,7 +31,15 @@ This repository contains two primary implementations:
 *   **Configuration**:
     *   **Model Selection**: Specify the desired LLM using the `-m`/`--model` flag. Model aliases are supported (e.g., `claude-3-opus` maps to `claude-3-opus-latest`).
     *   **Temperature Control**: Adjust the creativity/randomness of the LLM's output using the `-t`/`--temperature` flag (typically 0.0 to 1.0 or 2.0 depending on the provider's scale, the tool handles scaling internally).
-    *   **API Credentials**: Configure API keys and necessary base URLs (for Llama/OpenAI) via environment variables (e.g., `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `LLAMA_BASE_URL`).
+    *   **API Credentials**: Configure API keys and necessary base URLs  via environment variables
+      - ANTHROPIC_API_KEY
+      - GEMINI_API_KEY
+      - LLAMA_API_KEY
+      - LLAMA_BASE_URL
+      - OPENAI_API_KEY
+      - OPENAI_BASE_URL
+
+These variables are necessary for the respective clients (Anthropic, Gemini, Llama, OpenAI) in both the Go and Python implementations to authenticate and connect to the corresponding LLM provider APIs.   
 *   **Structured Interaction**: Uses predefined system prompts for each command (`plan`, `code`, `review`, `query`) to provide context and guide the LLM towards the desired output format and task execution.
 *   **Modular Design**: Both implementations separate the user-facing CLI logic from the core LLM interaction library (`pkg/sqirvy` in Go, `sqirvy_cli/sqirvy` in Python), promoting maintainability and reusability.
 
