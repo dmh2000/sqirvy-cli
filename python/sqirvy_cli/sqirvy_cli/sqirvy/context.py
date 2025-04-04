@@ -10,8 +10,16 @@ import sys
 import os
 from dataclasses import dataclass
 from typing import List, Optional
-from sqirvy.models import get_provider_name, get_model_alias
-from sqirvy.prompts import code_prompt, plan_prompt, query_prompt, review_prompt
+from . import models
+from . import prompts
+
+# Access imported modules
+get_provider_name = models.get_provider_name
+get_model_alias = models.get_model_alias
+code_prompt = prompts.code_prompt
+plan_prompt = prompts.plan_prompt
+query_prompt = prompts.query_prompt
+review_prompt = prompts.review_prompt
 
 system_prompts = {
     "query": query_prompt,

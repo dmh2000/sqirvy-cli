@@ -25,7 +25,8 @@ The Python version of `sqirvy-cli` provides a flexible and extensible way to que
     *   Environment variables for API keys (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `LLAMA_API_KEY`) and base URLs (`OPENAI_BASE_URL`, `LLAMA_BASE_URL`) accessed via helper functions in `sqirvy/env.py`.
 *   **System Prompts**: Uses predefined prompt strings defined in `sqirvy/prompts.py` for each command.
 *   **Modular Design**:
-    *   `sqirvy_cli/main.py`: Main entry point, handles argument parsing and orchestrates execution.
+    *   `sqirvy_cli/main.py`: Main entry point, orchestrates execution flow.
+    *   `sqirvy_cli/cli_args.py`: Handles command-line argument parsing.
     *   `sqirvy_cli/sqirvy/`: Core library containing the LLM interaction logic.
         *   `client.py`: Defines the abstract `Client` base class and the `new_client` factory function.
         *   `context.py`: Defines the `Context` dataclass to hold all execution parameters and handles input aggregation.
@@ -80,15 +81,53 @@ Remember to set the required API key environment variables for the models you in
 
 ## Testing
 
-Unit tests are included and use Python's built-in `unittest` framework. You can run tests using the provided shell scripts or standard discovery:
+The project uses `pytest` for unit testing. Tests are located in the `sqirvy_cli/test` directory and organized into subdirectories based on test type:
+
+- `unit`: Contains unit tests that don't require external dependencies
+- (Future expansion for integration, functional tests, etc.)
+
+### Running Tests
+
+You can run the tests using the provided Makefile targets:
 
 ```bash
-# Run all tests using Python's discovery
-cd python/sqirvy_cli/sqirvy_cli
-python -m unittest discover .
+# Run all tests
+cd python
+make test
 
-# Or use the provided test scripts (example)
-./test_cli.py # May require adjustments based on script content/permissions
+# Run only unit tests
+make test-unit
+
+# Run tests with coverage report
+make test-coverage
 ```
 
-Note: Some tests might require API keys to be set in the environment and may interact with live services.
+Alternatively, you can run pytest directly:
+
+```bash
+# Run all tests with detailed output
+cd python/sqirvy_cli
+python -m pytest -v
+
+# Run a specific test file
+python -m pytest test/unit/test_cli.py -v
+
+# Run a specific test function
+python -m pytest test/unit/test_cli.py::TestCliArgs::test_parse_arguments_valid -v
+```
+
+### Test Structure
+
+Tests follow these conventions:
+
+- Test files named with `test_` prefix
+- Test classes named with `Test` prefix
+- Test functions named with `test_` prefix
+- Parametrized tests for testing multiple input cases
+- Mock objects used to avoid dependencies on external services
+
+### Notes
+
+- Unit tests don't require API keys as they use mocking
+- Integration tests (when added) may require API keys to be set in the environment and may interact with live services
+- Test configuration is in `pytest.ini` and `conftest.py`

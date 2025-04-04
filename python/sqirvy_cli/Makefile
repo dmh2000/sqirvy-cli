@@ -1,11 +1,17 @@
-.PHONY: test
+.PHONY: test test-unit test-integration build
 
-test:
-	python -m unittest sqirvy_cli.test_cli
-	# python -m sqirvy.anthropic_test
-	# python -m sqirvy.gemini_test
-	# python -m sqirvy.openai_test
-	# python -m sqirvy.llama_test
+test: test-unit
+	# Runner for the integration tests (uncomment when needed)
+	# cd sqirvy_cli && python -m sqirvy.anthropic_test
+	# cd sqirvy_cli && python -m sqirvy.gemini_test
+	# cd sqirvy_cli && python -m sqirvy.openai_test
+	# cd sqirvy_cli && python -m sqirvy.llama_test
+
+test-unit:
+	python -m pytest -v
+
+test-coverage:
+	python -m pytest --cov=sqirvy_cli --cov-report=term --cov-report=xml:coverage.xml
 
 build:
 	python -m build

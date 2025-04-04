@@ -4,7 +4,8 @@
 - **Go**: `make -C go debug` (build), `make -C go test` (all tests)
 - **Go Single Test**: `cd go/pkg/sqirvy && go test -run TestAnthropicClient_QueryText`
 - **Python**: `make -C python test` (all tests)
-- **Python Single Test**: `cd python/sqirvy_cli && python -m unittest sqirvy_cli.test_cli.TestSqirvyCliArgs.test_query_command_full`
+- **Python Pytest**: `cd python/sqirvy_cli && python -m pytest`
+- **Python Single Test**: `cd python/sqirvy_cli && python -m pytest test/unit/test_cli.py::TestCliArgs::test_parse_arguments_valid -v`
 - **TypeScript**: `cd ts && npm run start`
 
 ## Code Style Guidelines

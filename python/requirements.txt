@@ -6,6 +6,8 @@ cachetools==5.5.2
 certifi==2025.1.31
 charset-normalizer==3.4.1
 distro==1.9.0
+pytest==7.4.4
+pytest-cov==4.1.0
 filetype==1.2.0
 google-ai-generativelanguage==0.6.17
 google-api-core==2.24.2

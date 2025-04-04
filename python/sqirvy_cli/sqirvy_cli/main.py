@@ -7,68 +7,11 @@ Receives input from stdin and command-line arguments (flags, filenames, URLs).
 Prints the parsed arguments and stdin content to stdout.
 """
 
-import argparse
 import sys
-from sqirvy.context import create_context, SUPPORTED_COMMANDS
-from sqirvy.client import new_client
-from sqirvy.models import print_providers_with_models
-
-
-def parse_arguments():
-    """Parse command line arguments in the format:
-    sqirvy_cli <command> <model> <temperature> [filenames..., urls...]
-    """
-    parser = argparse.ArgumentParser(
-        description="Sqirvy CLI - Interact with LLMs", add_help=False
-    )
-    
-    # Help arguments
-    parser.add_argument(
-        "-h",
-        "--help",
-        action="store_true",
-        help="Show help message and exit",
-    )
-
-    # Required command positional argument
-    parser.add_argument(
-        "-c",
-        "--command",
-        required=False,
-        choices=SUPPORTED_COMMANDS,
-        type=str,
-        default="query",
-        help="Command to execute: query, plan, code, or review",
-    )
-
-    # Model parameter with short and long form
-    parser.add_argument(
-        "-m",
-        "--model",
-        type=str,
-        required=False,
-        default=None,
-        help="Model name to use",
-    )
-
-    # Temperature parameter with short and long form
-    parser.add_argument(
-        "-t",
-        "--temperature",
-        type=float,
-        required=False,
-        default=1.0,
-        help="Temperature value (0-1.0)",
-    )
-
-    # Any number of filenames or URLs after the other arguments
-    parser.add_argument(
-        "files_or_urls", nargs="*", help="List of files and/or URLs to process"
-    )
-
-    args = parser.parse_args()
-    
-    return args
+from .sqirvy.context import create_context, SUPPORTED_COMMANDS
+from .sqirvy.client import new_client
+from .sqirvy.models import print_providers_with_models
+from .cli_args import parse_arguments
 
 
 command_help = {
