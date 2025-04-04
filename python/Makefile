@@ -1,5 +1,7 @@
-.PHONY: test test-unit test-coverage
+.PHONY: test test-unit test-coverage release
 
+release:
+	$(MAKE) -C sqirvy_cli release
 test:
 	$(MAKE) -C sqirvy_cli test
 

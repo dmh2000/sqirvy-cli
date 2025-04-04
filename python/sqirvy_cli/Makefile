@@ -13,5 +13,5 @@ test-unit:
 test-coverage:
 	python -m pytest --cov=sqirvy_cli --cov-report=term --cov-report=xml:coverage.xml
 
-build:
+release:
 	python -m build
