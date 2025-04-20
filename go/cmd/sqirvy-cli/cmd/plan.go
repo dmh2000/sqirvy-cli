@@ -27,21 +27,26 @@ The prompt is constructed in this order:
 	Input from stdin
 	Any number of filename or url arguments	`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Execute the query using the specific planning prompt
 		response, err := executeQuery(cmd, planPrompt, args)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Error executing plan command: %v", err)
 		}
-		// Print response to stdout
+		// Print the LLM response to standard output
 		fmt.Print(response)
-		fmt.Println()
+		fmt.Println() // Ensure a newline at the end
 	},
 }
 
+// planUsage prints the usage instructions for the plan command.
 func planUsage(cmd *cobra.Command) error {
 	fmt.Println("Usage: stdin | sqirvy-cli plan [flags] [files| urls]")
+	fmt.Println("\nFlags:")
+	cmd.Flags().PrintDefaults()
 	return nil
 }
 
+// init registers the plan command with the root command and sets its custom usage function.
 func init() {
 	rootCmd.AddCommand(planCmd)
 	planCmd.SetUsageFunc(planUsage)
