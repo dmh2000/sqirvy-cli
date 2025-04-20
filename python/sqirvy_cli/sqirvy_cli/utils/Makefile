@@ -1,7 +1,7 @@
 .PHONY: release debug test clean pylint
 
 build: pylint
-	# Package specific release commands
+	# Utils specific release commands
 
 debug: pylint
 	# Debug setup
@@ -11,7 +11,6 @@ test: pylint
 
 clean:
 	rm -rf __pycache__ *.pyc
-	$(MAKE) -C sqirvy clean
 
 pylint:
 	pylint . || true

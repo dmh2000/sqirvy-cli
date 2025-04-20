@@ -1,4 +1,4 @@
-.PHONY: test clean debug release review deploy
+.PHONY: build test clean review
 
 SUBDIRS = cmd pkg
 PKG_SOURCES := $(shell find pkg -type f -name '*.go')
@@ -8,17 +8,12 @@ SOURCES:= $(PKG_SOURCES) $(CMD_SOURCES)
 # silence make output. remove -s to see make output
 export SILENT=
 
-debug:
+build:
 	@for dir in $(SUBDIRS); do \
-		$(MAKE) $(SILENT) -C $$dir debug; \
+		$(MAKE) $(SILENT) -C $$dir build; \
 	done
 
-release:
-	@for dir in $(SUBDIRS); do \
-		$(MAKE) $(SILENT) -C $$dir release; \
-	done
-
-test: debug
+test: 
 	@for dir in $(SUBDIRS); do \
 		$(MAKE)  $(SILENT) -C $$dir test; \
 	done
@@ -30,9 +25,6 @@ clean:
 	done
 	-rm -rf bin
 
-review:	debug
+review:	build
 	bin/sqirvy-review -m claude-3-5-haiku-latest  $(SOURCES) >REVIEW.md
 
-deploy: clean release test review
-	git add .
-	# git commit -m "Auto commit : clean, build, test, review"

@@ -62,7 +62,7 @@ func TestAllModels(t *testing.T) {
 			for _, tt := range tests {
 				t.Run(tt.name, func(t *testing.T) {
 					ctx := context.Background()
-					got, err := client.QueryText(ctx, assistant, tt.prompt, model, Options{MaxTokens: GetMaxTokens(model), Temperature: 50})
+					got, err := client.QueryText(ctx, assistant, tt.prompt, model, Options{MaxTokens: GetMaxTokens(model), Temperature: 0.5})
 					if tt.wantErr {
 						if err == nil {
 							t.Errorf("QueryText() error = nil, wantErr %v", tt.wantErr)

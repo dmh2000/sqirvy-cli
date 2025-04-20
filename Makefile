@@ -1,12 +1,12 @@
-.PHONY: test debug release clean
+.PHONY: build test  clean
+
+SILENT=-s
+
+build:
+	$(MAKE) $(SILENT) -C go build
 
 test:
-	$(MAKE) -C python test
-	$(MAKE) -C go
+	$(MAKE) $(SILENT)-C go
 
-debug:
-	$(MAKE) -C go debug
-	
-release:
-	$(MAKE) -C go build
-	$(MAKE) -C python build
+clean:
+	$(MAKE) $(SILENT) -C go clean

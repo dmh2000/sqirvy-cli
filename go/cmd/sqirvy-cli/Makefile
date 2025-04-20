@@ -1,7 +1,7 @@
-.PHONY: debug release test clean
+.PHONY: build test clean
 
 PROJECT=sqirvy-cli
-BINDIR=../../../bin
+BINDIR=../bin
 
 # detect variants of Windows
 ifeq ($(filter Windows%, $(OS)),Windows)
@@ -20,21 +20,16 @@ else
 	endif
 endif
 
-debug: 
-	staticcheck ./...
-	go vet ./...
-	GOOS=$(arch) GOARCH=amd64 go build -o $(PROJECT) .
-
-release: 
+build: 
 	staticcheck ./...
 	go vet ./...
 	mkdir -p $(BINDIR)
-	# build without compression
-	# GOOS=$(arch) GOARCH=amd64 go build . -o $(BINDIR)/$(PROJECT)
-	# build with compression 
-	rm $(BINDIR)/$(PROJECT)
-	GOOS=$(arch) GOARCH=amd64 go build . 
-	upx -1 -o $(BINDIR)/$(PROJECT) $(PROJECT)
+	GOOS=$(arch) GOARCH=amd64 go build -o $(BINDIR)/$(PROJECT) .
+	
+# build with compression 
+# rm $(BINDIR)/$(PROJECT)
+# GOOS=$(arch) GOARCH=amd64 go build . 
+# upx -1 -o $(BINDIR)/$(PROJECT) $(PROJECT)
 
 test:
 	@./test.sh 

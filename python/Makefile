@@ -1,9 +1,19 @@
-.PHONY: test test-unit test-coverage release
+.PHONY: release debug test clean pylint
 
-release:
+build:
 	$(MAKE) -C sqirvy_cli release
-test:
+
+debug: pylint
+	$(MAKE) -C sqirvy_cli debug
+
+test: pylint
 	$(MAKE) -C sqirvy_cli test
+
+clean:
+	$(MAKE) -C sqirvy_cli clean
+
+pylint:
+	$(MAKE) -C sqirvy_cli pylint
 
 test-unit:
 	$(MAKE) -C sqirvy_cli test-unit

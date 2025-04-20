@@ -1,7 +1,7 @@
 #!/bin/bash
 
-BINDIR=../../bin
-TARGET=./sqirvy-cli
+BINDIR=../bin
+TARGET=$BINDIR/sqirvy-cli
 TESTDIR=./test
 
 # rebuild the binaries
@@ -60,7 +60,6 @@ code="create a simple webpage with a counter and buttons to increment and decrem
 query="what is the sum of 1 + 2 + 3"   
 
 mkdir -p $TESTDIR
-make -s debug
 
 echo "-------------------------------"
 echo "sqirvy no flags or args"

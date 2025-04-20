@@ -1,15 +1,13 @@
-.PHONY: debug release  test clean
+.PHONY: build test clean
 
-debug:
+
+build:
 	staticcheck ./...
 	go vet ./...
 
-release:
-	staticcheck ./...
-
 test:
 	@echo "Testing pkg/sqirvy"
-	go test .
+	go test -timeout 2m .
 
 clean:
 	@echo "pkg/sqirvy"

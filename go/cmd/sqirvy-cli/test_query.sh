@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Path to the sqirvy-cli executable
-SQIRVY_CLI="./sqirvy-cli"
+BINDIR=../bin
+TARGET=$BINDIR/sqirvy-cli
+TESTDIR=./test
 
 # Get the list of all supported models
 models=(
@@ -41,7 +42,7 @@ for model in "${models[@]}"; do
     echo "Testing model: $model"
     echo "==============================================================="
     output_file="$TESTDIR/query_${model}.txt"
-    echo "$query" | $SQIRVY_CLI query -m "$model" > "$output_file" 2>&1
+    echo "$query" | $TARGET query -m "$model" > "$output_file" 2>&1
     
     # Get the exit code
     exit_code=$?

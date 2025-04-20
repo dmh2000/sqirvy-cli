@@ -1,16 +1,11 @@
-.PHONY: debug release test clean
+.PHONY: build test clean
 
 BINDIR=../bin
 SUBDIRS = sqirvy-cli
 
-debug:
+build:
 	@for dir in $(SUBDIRS); do \
-		$(MAKE) $(SILENT)  -C $$dir debug; \
-	done
-
-release:
-	@for dir in $(SUBDIRS); do \
-		$(MAKE) $(SILENT)  -C $$dir release; \
+		$(MAKE) $(SILENT)  -C $$dir build; \
 	done
 
 test:
