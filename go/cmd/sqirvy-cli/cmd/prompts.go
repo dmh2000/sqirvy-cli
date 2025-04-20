@@ -33,26 +33,25 @@ var codePrompt string
 //go:embed prompts/review.md
 var reviewPrompt string
 
-// ReadPrompt processes input from multiple sources and combines them into a slice of prompts.
-// It handles input from:
-//   - A base system prompt
-//   - Standard input (stdin)
-//   - URLs (which are scraped for content)
-//   - Local files
-//
-// The function ensures that the total size of all inputs does not exceed MaxInputTotalBytes.
+// ReadPrompt processes input from standard input (stdin), URLs, and local files,
+// combining them into a slice of strings suitable for use as prompts.
+// It ensures the total size of all inputs does not exceed MaxInputTotalBytes.
+// Input sources are processed in the order: stdin, then arguments (files/URLs).
+// If no input is provided via stdin or arguments, a default prompt is used.
 //
 // Parameters:
-//   - prompt: The initial system prompt to use
-//   - args: A slice of strings that can be either URLs or file paths
+//   - args: A slice of strings, each representing a local file path or a URL.
 //
 // Returns:
-//   - []string: A slice containing all processed prompts
-//   - error: An error if any operation fails or if size limits are exceeded
+//   - []string: A slice containing the content from stdin and each file/URL,
+//     formatted and ready to be used as prompts. Returns a default prompt if
+//     no other input is provided.
+//   - error: An error if reading stdin, scraping a URL, reading a file fails,
+//     or if the total combined size exceeds MaxInputTotalBytes.
 func ReadPrompt(args []string) ([]string, error) {
 
 	var prompts []string
-	var length int64
+	var length int64 // Tracks the cumulative size of the prompts
 
 	// Initialize with the system prompt and check size limit
 
@@ -99,7 +98,8 @@ func ReadPrompt(args []string) ([]string, error) {
 		}
 	}
 
-	// use default prompt if no other ones are specified
+	// If no prompts were gathered from stdin or arguments, use the default prompt.
+	// This handles cases where stdin is not piped and no file/URL args are given.
 	if len(prompts) == 0 || (len(prompts) == 1 && prompts[0] == "") {
 		prompts = []string{defaultPrompt}
 	}

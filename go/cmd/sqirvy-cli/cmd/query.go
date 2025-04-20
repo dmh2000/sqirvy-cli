@@ -10,30 +10,39 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// queryCmd represents the query command
+// queryCmd represents the command to execute an arbitrary query against the LLM.
+// It constructs a prompt using a generic system prompt, input from stdin,
+// and content from specified files or URLs, then sends it to the LLM
+// and prints the response to stdout. This is the default command if none is specified.
 var queryCmd = &cobra.Command{
 	Use:   "query",
-	Short: "Execute an arbitrary query to the LLM",
+	Short: "Execute an arbitrary query to the LLM (default command)",
 	Long: `sqirvy-cli query will send a request to the LLM to execute an arbitrary query.
-It will not add internal prompts or context. The prompt to the LLM will consist of 
-any input from stdint, and then any filename or url arguments, in the order specified.
+It uses a general-purpose system prompt. The full prompt to the LLM will consist of 
+this system prompt, any input from stdin, and then any filename or url arguments, 
+in the order specified.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Execute the query using the generic query prompt
 		response, err := executeQuery(cmd, queryPrompt, args)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Error executing query command: %v", err)
 		}
-		// Print response to stdout
+		// Print the LLM response to standard output
 		fmt.Print(response)
-		fmt.Println()
+		fmt.Println() // Ensure a newline at the end
 	},
 }
 
+// queryUsage prints the usage instructions for the query command.
 func queryUsage(cmd *cobra.Command) error {
 	fmt.Println("Usage: stdin | sqirvy-cli query [flags] [files| urls]")
+	fmt.Println("\nFlags:")
+	cmd.Flags().PrintDefaults()
 	return nil
 }
 
+// init registers the query command with the root command and sets its custom usage function.
 func init() {
 	rootCmd.AddCommand(queryCmd)
 	queryCmd.SetUsageFunc(queryUsage)

@@ -10,33 +10,42 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// reviewCmd represents the review command
+// reviewCmd represents the command to request a code review from the LLM.
+// It constructs a prompt including an internal system prompt for code review,
+// input from stdin (usually the code to be reviewed), and content from
+// specified files or URLs (e.g., related code or context), then sends it
+// to the LLM and prints the generated review to stdout.
 var reviewCmd = &cobra.Command{
 	Use:   "review",
-	Short: "Request the LLM to generate a code review .",
+	Short: "Request the LLM to generate a code review",
 	Long: `sqiryv-cli review
-It will to review input code and will output the results to stdout.
+It will ask the LLM to review input code and will output the results to stdout.
 The prompt is constructed in this order:
     An internal system prompt for code review
     Input from stdin
     Any number of filename or url arguments
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Execute the query using the specific code review prompt
 		response, err := executeQuery(cmd, reviewPrompt, args)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Error executing review command: %v", err)
 		}
-		// Print response to stdout
+		// Print the LLM response (the review) to standard output
 		fmt.Print(response)
-		fmt.Println()
+		fmt.Println() // Ensure a newline at the end
 	},
 }
 
+// reviewUsage prints the usage instructions for the review command.
 func reviewUsage(cmd *cobra.Command) error {
 	fmt.Println("Usage: stdin | sqirvy-cli review [flags] [files| urls]")
+	fmt.Println("\nFlags:")
+	cmd.Flags().PrintDefaults()
 	return nil
 }
 
+// init registers the review command with the root command and sets its custom usage function.
 func init() {
 	rootCmd.AddCommand(reviewCmd)
 	reviewCmd.SetUsageFunc(reviewUsage)

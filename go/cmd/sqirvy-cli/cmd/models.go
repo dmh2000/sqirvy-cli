@@ -13,39 +13,49 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// codeCmd represents the code command
+// modelsCmd represents the command to list supported LLM providers and models.
+// It retrieves the list of models and their providers from the sqirvy package
+// and prints them to standard output, sorted alphabetically by provider and model.
 var modelsCmd = &cobra.Command{
 	Use:   "models",
-	Short: "list the supported models and providers",
-	Long:  `sqirvy-cli models will list the supported models and providers`,
+	Short: "List the supported LLM models and providers",
+	Long:  `sqirvy-cli models lists all the Large Language Models (LLMs) supported by the tool, grouped by their provider (e.g., OpenAI, Anthropic, Gemini, Llama).`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var models []string
-		var length int
-		models = sqirvy.GetModelList()
-		for _, v := range models {
-			length = max(length, len(v))
-		}
-		fmt.Println("Supported Providers and Models:")
+		// Retrieve the list of models and providers
+		mplist := sqirvy.GetModelProviderList()
 
+		// Format the list for printing
 		var mptext []string
-		var mplist []sqirvy.ModelProvider = sqirvy.GetModelProviderList()
 		for _, v := range mplist {
-			mptext = append(mptext, fmt.Sprintf("  %-10s: %s\n", v.Provider, v.Model))
+			// Format as "  Provider  : ModelName"
+			mptext = append(mptext, fmt.Sprintf("  %-10s: %s", v.Provider, v.Model))
 		}
+
+		// Sort the formatted list alphabetically
 		sort.Strings(mptext)
+
+		// Print the header and the sorted list
+		fmt.Println("Supported Providers and Models:")
 		for _, m := range mptext {
-			fmt.Print(m)
+			fmt.Println(m)
 		}
-		fmt.Println()
+		fmt.Println() // Add a trailing newline for cleaner output
 	},
 }
 
+// modelsUsage prints the usage instructions for the models command.
 func modelsUsage(cmd *cobra.Command) error {
 	fmt.Println("Usage: sqirvy-cli models")
+	// No flags specific to this command, but persistent flags apply.
+	fmt.Println("\nFlags:")
+	cmd.PersistentFlags().PrintDefaults()
 	return nil
 }
 
+// init registers the models command with the root command and sets its custom usage function.
 func init() {
 	rootCmd.AddCommand(modelsCmd)
-	codeCmd.SetUsageFunc(modelsUsage)
+	// Note: The original code set the usage func on codeCmd here, which was likely a mistake.
+	// Setting it on modelsCmd as intended.
+	modelsCmd.SetUsageFunc(modelsUsage)
 }

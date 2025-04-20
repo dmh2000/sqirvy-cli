@@ -10,10 +10,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// planCmd represents the plan command
+// planCmd represents the command to request a plan generation from the LLM.
+// It constructs a prompt including an internal system prompt for planning,
+// input from stdin, and content from specified files or URLs, then sends it
+// to the LLM and prints the generated plan to stdout.
 var planCmd = &cobra.Command{
 	Use:   "plan",
-	Short: "Request the LLM to generate a plan.",
+	Short: "Request the LLM to generate a plan",
 	Long: `sqiryv-cli plan:
 It will ask the LLM to generate a plan based on the given prompt. 
 It will send a request to the LLM and output the results to stdout.

@@ -32,11 +32,19 @@ var rootCmd = &cobra.Command{
    - The "review" command is used to send a prompt to the LLM and receive a code review in response.
    - Sqirvy-cli is designed to support terminal command pipelines. 
 	`,
-
+	// Run defines the behavior when the root command is executed without subcommands.
+	// It defaults to executing the 'query' command with the provided arguments.
 	Run: func(cmd *cobra.Command, args []string) {
-		// if no command is specified, use 'query'
-		cmd.SetArgs(append([]string{"query"}, args...))
-		cmd.Execute()
+		// If no command is specified, prepend 'query' to the arguments
+		// and execute the command again. This makes 'query' the default command.
+		queryArgs := append([]string{"query"}, args...)
+		cmd.SetArgs(queryArgs)
+		if err := cmd.Execute(); err != nil {
+			// Error during execution is typically handled by Cobra itself,
+			// but we catch it here just in case.
+			fmt.Fprintf(os.Stderr, "Error executing default command 'query': %v\n", err)
+			os.Exit(1)
+		}
 	},
 }
 
@@ -49,22 +57,29 @@ func Execute() {
 	}
 }
 
+// init sets up the application's persistent flags and initializes configuration handling.
+// It defines flags common to all commands, such as model selection and temperature.
 func init() {
+	// Register the initConfig function to run when Cobra initializes.
 	cobra.OnInitialize(initConfig)
 
-	// flags
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/sqirvy-cli/config.yaml)")
-	rootCmd.PersistentFlags().StringVar(&defaultPrompt, "default-prompt", "Hello", "default prompt to use")
-	viper.BindPFlag("default-prompt", rootCmd.PersistentFlags().Lookup("default-prompt"))
-	rootCmd.PersistentFlags().StringP("model", "m", defaultModel, "LLM model to use")
-	viper.BindPFlag("model", rootCmd.PersistentFlags().Lookup("model"))
-	rootCmd.PersistentFlags().Float32P("temperature", "t", defaultTemperature, "LLM temperature to use (0..1)")
+	// Define persistent flags available to the root command and all subcommands.
+	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/sqirvy-cli/config.yaml)") // Example if config file flag was used
+	rootCmd.PersistentFlags().StringVar(&defaultPrompt, "default-prompt", "Hello", "Default prompt if no stdin/args provided")
+	viper.BindPFlag("default-prompt", rootCmd.PersistentFlags().Lookup("default-prompt")) // Bind flag to Viper config
+
+	rootCmd.PersistentFlags().StringP("model", "m", defaultModel, "LLM model to use (e.g., gpt-4o, claude-3-5-sonnet-latest)")
+	viper.BindPFlag("model", rootCmd.PersistentFlags().Lookup("model")) // Bind flag to Viper config
+
+	rootCmd.PersistentFlags().Float32P("temperature", "t", defaultTemperature, "LLM temperature (randomness) to use (0.0 to 1.0)")
+	viper.BindPFlag("temperature", rootCmd.PersistentFlags().Lookup("temperature")) // Bind flag to Viper config
 }
 
-// print config filename only once
+// configPrinted ensures the config file path is printed only once to stderr.
 var configPrinted bool
 
-// initConfig reads in config file and ENV variables if set.
+// initConfig reads in configuration settings from a config file (if found)
+// and environment variables. Viper handles the precedence (flags > env > config).
 func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
