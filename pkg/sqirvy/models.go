@@ -42,12 +42,12 @@ var modelToProvider = map[string]string{
 	"claude-3-opus-latest":       Anthropic,
 	"claude-3-opus-20240229":     Anthropic,
 	// google gemini models
-	// gemini-2.0-pro-exp-02-05
-	// gemini-2.0-flash-thinking-exp-01-21
-	"gemini-2.0-flash":              Gemini,
-	"gemini-1.5-flash":              Gemini,
-	"gemini-1.5-pro":                Gemini,
-	"gemini-2.0-flash-thinking-exp": Gemini,
+	"gemini-1.5-flash":               Gemini,
+	"gemini-1.5-pro":                 Gemini,
+	"gemini-2.0-flash":               Gemini,
+	"gemini-2.0-flash-thinking-exp":  Gemini,
+	"gemini-2.5-flash-preview-04-17": Gemini,
+	"gemini-2.5-pro-preview-03-25":   Gemini,
 
 	// openai models
 	"gpt-4o":      OpenAI,
@@ -62,18 +62,27 @@ var modelToProvider = map[string]string{
 // If a model is not in this map, MAX_TOKENS_DEFAULT will be used.
 var modelToMaxTokens = map[string]int64{
 	// anthropic models
-	"claude-3-7-sonnet-latest": MAX_TOKENS_DEFAULT,
-	"claude-3-5-sonnet-latest": MAX_TOKENS_DEFAULT,
-	"claude-3-5-haiku-latest":  MAX_TOKENS_DEFAULT,
-	"claude-3-opus-latest":     4096,
+	"claude-3-7-sonnet-20250219": 64000,
+	"claude-3-5-sonnet-20241022": 64000,
+	"claude-3-7-sonnet-latest":   64000,
+	"claude-3-5-sonnet-latest":   64000,
+	"claude-3-5-haiku-latest":    MAX_TOKENS_DEFAULT,
+	"claude-3-haiku-20240307":    MAX_TOKENS_DEFAULT,
+	"claude-3-opus-latest":       MAX_TOKENS_DEFAULT,
+	"claude-3-opus-20240229":     MAX_TOKENS_DEFAULT,
 	// google gemini models
-	"gemini-2.0-flash": MAX_TOKENS_DEFAULT,
-	"gemini-1.5-flash": MAX_TOKENS_DEFAULT,
-	"gemini-1.5-pro":   MAX_TOKENS_DEFAULT,
+	"gemini-1.5-flash":               MAX_TOKENS_DEFAULT,
+	"gemini-1.5-pro":                 MAX_TOKENS_DEFAULT,
+	"gemini-2.0-flash":               MAX_TOKENS_DEFAULT,
+	"gemini-2.0-flash-thinking-exp":  MAX_TOKENS_DEFAULT,
+	"gemini-2.5-flash-preview-04-17": 65536,
+	"gemini-2.5-pro-preview-03-25":   65536,
+
 	// openai models
-	"gpt-4o":      4096,
-	"gpt-4o-mini": 4096,
-	"gpt-4-turbo": 4096,
+	"gpt-4o":      MAX_TOKENS_DEFAULT,
+	"gpt-4o-mini": MAX_TOKENS_DEFAULT,
+	"gpt-4-turbo": MAX_TOKENS_DEFAULT,
+	// "o3-mini":     "openai",
 	// llama models
 	"llama3.3-70b": MAX_TOKENS_DEFAULT,
 }

@@ -1,50 +1,95 @@
-# Sqirvy-cli
+# Sqirvy-cli (Go Implementation)
 
-Sqirvy-cli is a versatile command-line interface (CLI) tool designed for interacting with various Large Language Models (LLMs). It offers implementations in both Go and Python, providing a consistent experience across different development environments.
+This directory contains the Go implementation of `sqirvy-cli`, a command-line tool for interacting with various Large Language Models (LLMs).
 
-The tool allows users to leverage the power of multiple AI providers directly from their terminal, integrating smoothly into development workflows and scripting pipelines.
+## Overview
 
-## Implementations
+The Go version of `sqirvy-cli` provides a native executable for querying LLMs from the terminal. It leverages several popular Go libraries to offer a robust and efficient command-line experience.
 
-This repository contains two primary implementations:
+## Key Features
 
-1.  **Go (`go/`)**: A native executable built using Go. It utilizes libraries like Cobra for the CLI structure, Viper for configuration, `langchaingo` for LLM interactions, and `colly` for web scraping.
-2.  **Python (`python/`)**: A standard Python package. It uses `argparse` for command-line argument parsing, the `langchain` ecosystem for LLM interactions, and `requests`/`beautifulsoup4` for web scraping.
-
-## Key Features (Common to both Go and Python)
-
-*   **Multi-Provider Support**: Interact with models from major providers:
-    *   Anthropic (Claude models)
-    *   Google (Gemini models)
-    *   OpenAI (GPT models)
-    *   Llama (via OpenAI-compatible APIs)
-*   **Command-Driven Interface**: Offers distinct commands tailored for specific tasks:
-    *   `query`: Send arbitrary prompts or questions to the selected LLM. (Default command if none is specified).
-    *   `plan`: Request the LLM to generate a plan or design based on the provided input.
-    *   `code`: Ask the LLM to generate source code based on a prompt or plan.
-    *   `review`: Instruct the LLM to perform a review of the provided code or text.
-    *   `models` (Go only, Python shows via help): List the supported LLM models and their corresponding providers.
-*   **Flexible Input Sources**: Accepts input prompts through multiple channels:
-    *   **Standard Input (stdin)**: Enables seamless integration with Unix pipelines (e.g., `cat file.txt | sqirvy-cli ...`).
-    *   **File Paths**: Directly process the content of local files.
-    *   **URLs**: Automatically scrape and use the text content from web pages.
+*   **Native Executable**: Compiles to a single binary for easy distribution and execution.
+*   **Multi-Provider Support**: Interacts with Anthropic, Google Gemini, OpenAI, and Llama models via the `langchaingo` library.
+*   **Structured Commands**: Uses the `cobra` library for a clear command structure:
+    *   `query`: Sends arbitrary prompts (default command).
+    *   `plan`: Requests the LLM to generate a plan.
+    *   `code`: Asks the LLM to generate source code.
+    *   `review`: Instructs the LLM to review code or text.
+    *   `models`: Lists supported models and their providers.
+*   **Flexible Input**: Reads prompts from:
+    *   Standard Input (stdin) for easy piping.
+    *   File paths.
+    *   URLs (content is scraped using the `colly` library).
 *   **Configuration**:
-    *   **Model Selection**: Specify the desired LLM using the `-m`/`--model` flag. Model aliases are supported (e.g., `claude-3-opus` maps to `claude-3-opus-latest`).
-    *   **Temperature Control**: Adjust the creativity/randomness of the LLM's output using the `-t`/`--temperature` flag (typically 0.0 to 1.0 or 2.0 depending on the provider's scale, the tool handles scaling internally).
-    *   **API Credentials**: Configure API keys and necessary base URLs  via environment variables
-      - ANTHROPIC_API_KEY
-      - GEMINI_API_KEY
-      - LLAMA_API_KEY
-      - LLAMA_BASE_URL
-      - OPENAI_API_KEY
-      - OPENAI_BASE_URL
+    *   Command-line flags (`-m` for model, `-t` for temperature) managed by `cobra`.
+    *   Environment variables for API keys (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `LLAMA_API_KEY`) and base URLs (`OPENAI_BASE_URL`, `LLAMA_BASE_URL`).
+    *   Optional configuration file support via `viper` (default: `$HOME/.config/sqirvy-cli/config.yaml`).
+*   **System Prompts**: Uses embedded `.md` files for command-specific system prompts (`query.md`, `plan.md`, `code.md`, `review.md`).
+*   **Modular Design**:
+    *   `cmd/sqirvy-cli`: Contains the main application logic, command definitions (`cobra`), and prompt reading/processing.
+    *   `pkg/sqirvy`: Implements the core LLM interaction logic, defining the `Client` interface and provider-specific implementations (Anthropic, Gemini, OpenAI, Llama) using `langchaingo`. Manages model-provider mapping and token limits.
+    *   `pkg/util`: Provides utility functions for file reading (`files.go`) and web scraping (`scraper.go`).
 
-These variables are necessary for the respective clients (Anthropic, Gemini, Llama, OpenAI) in both the Go and Python implementations to authenticate and connect to the corresponding LLM provider APIs.   
-*   **Structured Interaction**: Uses predefined system prompts for each command (`plan`, `code`, `review`, `query`) to provide context and guide the LLM towards the desired output format and task execution.
-*   **Modular Design**: Both implementations separate the user-facing CLI logic from the core LLM interaction library (`pkg/sqirvy` in Go, `sqirvy_cli/sqirvy` in Python), promoting maintainability and reusability.
+## Building
 
-## Getting Started
+You can build the executable using the standard Go toolchain:
 
-Refer to the `README.md` files within the `go/` and `python/` directories for specific build, installation, and usage instructions for each implementation.
+```bash
+cd go/cmd/sqirvy-cli
+go build -o sqirvy-cli main.go
+```
 
-Ensure you have the necessary API keys set as environment variables for the providers you intend to use.
+Alternatively, use the provided Makefiles:
+
+```bash
+make build # Builds the binary in the project root
+```
+or
+```bash
+cd go
+make build # Builds the binary in go/bin/
+```
+
+## Running
+
+Once built, you can run the tool from your terminal:
+
+```bash
+# Basic query using default model and temperature
+echo "What is the capital of France?" | ./sqirvy-cli
+
+# Specify model and temperature, providing a file
+./sqirvy-cli -m claude-3-5-sonnet-latest -t 0.7 query my_prompt.txt
+
+# Generate a plan from stdin
+cat requirements.txt | ./sqirvy-cli plan -m gpt-4o
+
+# Generate code based on a plan file and a URL
+./sqirvy-cli code -m gemini-1.5-pro plan.md https://example.com/api-spec
+
+# List available models
+./sqirvy-cli models
+```
+
+Remember to set the required API key environment variables for the models you intend to use.
+
+## Testing
+
+Unit tests are included in the `pkg/sqirvy` and `pkg/util` directories. Run tests using:
+
+```bash
+cd go
+make test
+```
+
+Or run tests for specific packages:
+
+```bash
+cd go/pkg/sqirvy
+go test ./...
+
+cd go/pkg/util
+go test ./...
+```
+
+Note: Some tests in `pkg/sqirvy` require API keys to be set in the environment and will be skipped otherwise.

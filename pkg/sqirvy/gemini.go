@@ -49,6 +49,7 @@ func NewGeminiClient() (*GeminiClient, error) {
 // and returns the response.
 func (c *GeminiClient) QueryText(ctx context.Context, system string, prompts []string, model string, options Options) (string, error) {
 	options.Temperature = options.Temperature * c.temperatureScale
+	options.MaxTokens = modelToMaxTokens[model]
 	return QueryTextLangChain(ctx, c.llm, system, prompts, model, options)
 }
 

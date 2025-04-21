@@ -1,7 +1,7 @@
 .PHONY: build test clean
 
 PROJECT=sqirvy-cli
-BINDIR=../bin
+BINDIR=../../bin
 
 # detect variants of Windows
 ifeq ($(filter Windows%, $(OS)),Windows)

@@ -1,6 +1,6 @@
 .PHONY: build test clean
 
-BINDIR=../bin
+BINDIR=../../bin
 SUBDIRS = sqirvy-cli
 
 build:

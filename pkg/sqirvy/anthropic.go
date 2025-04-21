@@ -50,6 +50,7 @@ func NewAnthropicClient() (*AnthropicClient, error) {
 func (c *AnthropicClient) QueryText(ctx context.Context, system string, prompts []string, model string, options Options) (string, error) {
 	// scale the temperature
 	options.Temperature = options.Temperature * c.temperatureScale
+	options.MaxTokens = modelToMaxTokens[model]
 	return QueryTextLangChain(ctx, c.llm, system, prompts, model, options)
 }
 

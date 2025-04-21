@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BINDIR=../bin
+BINDIR=../../bin
 TARGET=$BINDIR/sqirvy-cli
 TESTDIR=./test
 

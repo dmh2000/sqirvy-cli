@@ -13,6 +13,7 @@ package sqirvy
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -109,6 +110,7 @@ func QueryTextLangChain(ctx context.Context, llm llms.Model, system string, prom
 		ctx, content,
 		llms.WithTemperature(float64(options.Temperature)),
 		llms.WithModel(model),
+		llms.WithMaxTokens(int(options.MaxTokens)),
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate completion: %w", err)
@@ -116,6 +118,7 @@ func QueryTextLangChain(ctx context.Context, llm llms.Model, system string, prom
 
 	var response strings.Builder
 	for _, part := range completion.Choices {
+		fmt.Fprintf(os.Stderr, "response completion %s:%v\n", model, part.StopReason)
 		response.WriteString(part.Content)
 	}
 
