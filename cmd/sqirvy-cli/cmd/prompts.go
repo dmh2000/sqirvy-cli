@@ -53,8 +53,6 @@ func ReadPrompt(args []string) ([]string, error) {
 	var prompts []string
 	var length int64 // Tracks the cumulative size of the prompts
 
-	// Initialize with the system prompt and check size limit
-
 	// Process standard input and check size limit
 	var stdinData string
 	stdinData, _, err := util.ReadStdin(MaxInputTotalBytes)
@@ -64,7 +62,7 @@ func ReadPrompt(args []string) ([]string, error) {
 	prompts = append(prompts, stdinData)
 	length += int64(len(stdinData))
 	if length > MaxInputTotalBytes {
-		return []string{""}, fmt.Errorf("error: total size would exceed limit of %d bytes (stdin)", MaxInputTotalBytes)
+		return nil, fmt.Errorf("error: total size would exceed limit of %d bytes (stdin)", MaxInputTotalBytes)
 	}
 
 	// Process each argument which can be either a URL or a file path
