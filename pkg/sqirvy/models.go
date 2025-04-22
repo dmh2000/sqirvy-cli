@@ -53,7 +53,7 @@ var modelToProvider = map[string]string{
 	"gpt-4o":      OpenAI,
 	"gpt-4o-mini": OpenAI,
 	"gpt-4-turbo": OpenAI,
-	// "o3-mini":     "openai",
+	"o4-mini":     OpenAI,
 	// llama models
 	"llama3.3-70b": Llama,
 }
@@ -63,9 +63,9 @@ var modelToProvider = map[string]string{
 var modelToMaxTokens = map[string]int64{
 	// anthropic models
 	"claude-3-7-sonnet-20250219": 64000,
-	"claude-3-5-sonnet-20241022": 64000,
+	"claude-3-5-sonnet-20241022": 8192,
 	"claude-3-7-sonnet-latest":   64000,
-	"claude-3-5-sonnet-latest":   64000,
+	"claude-3-5-sonnet-latest":   8192,
 	"claude-3-5-haiku-latest":    MAX_TOKENS_DEFAULT,
 	"claude-3-haiku-20240307":    MAX_TOKENS_DEFAULT,
 	"claude-3-opus-latest":       MAX_TOKENS_DEFAULT,

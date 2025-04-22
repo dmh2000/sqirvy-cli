@@ -29,9 +29,14 @@ make -C ../cmd
 # mode, you can change the model to one you have an API key for. use ">sqirvy-cli models" to see available models
 # all context is pipelined through the processing units
 rm -rf tetris && mkdir tetris 
-echo $part1 | $BINDIR/sqirvy-cli code -m gemini-2.5-pro-preview-03-25 > tetris/index.html
-echo $part2 | $BINDIR/sqirvy-cli code -m claude-3-7-sonnet-latest tetris/index.html >tetris/index.css
-echo $part3 | $BINDIR/sqirvy-cli code -m o4-mini tetris/index.html tetris/index.css > tetris/index.js
+
+# LLM's are stateless. They have no memory from query to query.
+# each step of the process sends the prompt to the llm, receives the code and stores it in a file
+# each step gets the additional context of the files generated before it. 
+# This helps avoid the 'exceeded max output tokens' error. 
+echo $part1 | $BINDIR/sqirvy-cli code -m gemini-2.5-pro-preview-03-25                >tetris/index.html
+echo $part2 | $BINDIR/sqirvy-cli code -m claude-3-7-sonnet-latest  tetris/index.html >tetris/index.css
+echo $part3 | $BINDIR/sqirvy-cli code -m o4-mini tetris/index.html tetris/index.css  >tetris/index.js
 
 # remove the delimiting triple backticks if present
 ./strip.sh tetris/index.html
@@ -41,6 +46,8 @@ echo $part3 | $BINDIR/sqirvy-cli code -m o4-mini tetris/index.html tetris/index.
 
 # now review the code
 $BINDIR/sqirvy-cli review -m claude-3-7-sonnet-latest tetris/index.html tetris/index.css tetris/index.js > tetris/review.md
+
+# start the server
 python -m http.server 8080 --directory tetris 
 
 
