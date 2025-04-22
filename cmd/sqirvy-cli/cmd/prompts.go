@@ -6,6 +6,7 @@ import (
 	util "dmh2000/sqirvy-cli/pkg/util"
 	_ "embed"
 	"fmt"
+	"net"
 	"net/url"
 )
 
@@ -68,9 +69,22 @@ func ReadPrompt(args []string) ([]string, error) {
 	// Process each argument which can be either a URL or a file path
 	for _, arg := range args {
 		// Attempt to parse argument as URL
-		_, err := url.ParseRequestURI(arg)
-		if err == nil {
-			// Handle URL content
+		parsedURL, err := url.ParseRequestURI(arg)
+		if err == nil && (parsedURL.Scheme == "http" || parsedURL.Scheme == "https") {
+			// Basic URL format is valid, now check for potential SSRF
+			hostname := parsedURL.Hostname()
+			ips, err := net.LookupIP(hostname)
+			if err != nil {
+				return []string{""}, fmt.Errorf("error: could not resolve hostname for URL %s: %w", arg, err)
+			}
+
+			for _, ip := range ips {
+				if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+					return []string{""}, fmt.Errorf("error: URL %s resolves to a non-public IP address %s, potential SSRF detected", arg, ip.String())
+				}
+			}
+
+			// Hostname resolves to public IPs, proceed with scraping
 			content, err := util.ScrapeURL(arg)
 			if err != nil {
 				return []string{""}, fmt.Errorf("error: failed to scrape URL %s: %w", arg, err)
