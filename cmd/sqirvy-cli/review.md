@@ -2,28 +2,28 @@
 
 ## Bugs
 
-1. **models.go (line 52)**: Comment in init function incorrectly references setting usage function on `codeCmd` instead of `modelsCmd`.
+fixed comment 1. **models.go (line 52)**: Comment in init function incorrectly references setting usage function on `codeCmd` instead of `modelsCmd`.
    ```go
    // Note: The original code set the usage func on codeCmd here, which was likely a mistake.
    ```
 
-2. **prompts.go (line 68-76)**: The error handling in `ReadPrompt()` returns `[]string{""}` instead of either an empty slice or nil, which is not idiomatic Go.
+fixed, returned nil 2. **prompts.go (line 68-76)**: The error handling in `ReadPrompt()` returns `[]string{""}` instead of either an empty slice or nil, which is not idiomatic Go.
 
-3. **prompts.go (lines 57-60)**: Missing initialization with system prompt size check at the beginning of `ReadPrompt()` function despite comments suggesting it should be there.
+Fixed, removed comment 3. **prompts.go (lines 57-60)**: Missing initialization with system prompt size check at the beginning of `ReadPrompt()` function despite comments suggesting it should be there.
 
-4. **root.go (line 28-44)**: The root command's Run function redirects to the query command by prepending "query" to args, but doesn't properly handle flags. This could cause issues when flags are defined before positional arguments.
+N/A 4. **root.go (line 28-44)**: The root command's Run function redirects to the query command by prepending "query" to args, but doesn't properly handle flags. This could cause issues when flags are defined before positional arguments.
 
-5. **execute.go (line 51)**: The `sqirvy.GetModelAlias()` function is called but there's no error handling for invalid aliases.
+N/A 5. **execute.go (line 51)**: The `sqirvy.GetModelAlias()` function is called but there's no error handling for invalid aliases.
 
 ## Security
 
-1. **prompts.go (line 92-103)**: Limited validation for URL arguments. While it checks if the URL is valid, it doesn't validate against potential security issues like SSRF attacks.
+fixed 1. **prompts.go (line 92-103)**: Limited validation for URL arguments. While it checks if the URL is valid, it doesn't validate against potential security issues like SSRF attacks.
 
-2. **Missing across files**: No sanitization of file contents or URL contents before passing to LLM, which could lead to prompt injection vulnerabilities.
+fixed 2. **Missing across files**: No sanitization of file contents or URL contents before passing to LLM, which could lead to prompt injection vulnerabilities.
 
-3. **Missing across files**: No API key handling or credential management visible in the codebase. API keys for LLM services may be exposed or insecurely stored.
+N/A 3. **Missing across files**: No API key handling or credential management visible in the codebase. API keys for LLM services may be exposed or insecurely stored.
 
-4. **prompts.go (line 104-112)**: When reading files, there's no check for file permissions or path traversal vulnerabilities.
+N/A 4. **prompts.go (line 104-112)**: When reading files, there's no check for file permissions or path traversal vulnerabilities.
 
 5. **execute.go**: No rate limiting implementation to prevent abuse of API endpoints.
 

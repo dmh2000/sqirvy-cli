@@ -55,7 +55,5 @@ func modelsUsage(cmd *cobra.Command) error {
 // init registers the models command with the root command and sets its custom usage function.
 func init() {
 	rootCmd.AddCommand(modelsCmd)
-	// Note: The original code set the usage func on codeCmd here, which was likely a mistake.
-	// Setting it on modelsCmd as intended.
 	modelsCmd.SetUsageFunc(modelsUsage)
 }
