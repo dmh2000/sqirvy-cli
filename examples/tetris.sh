@@ -1,30 +1,46 @@
 #!/bin/bash
 
-# this script does the following:
-# - creates a directory called tetris
-# - uses "sqirvy-cli plan" and gemini-1.5-flash to create a design for a web app
-# - uses "sqirvy-cli code"    and claude-3-7-sonnet-latest to generate code for the design
-# - uses #sqirvy-cli review"  and gpt-4o-mini to review the code
-# - starts a web server to serve the generated code
 
-design="create a design specification for a web project that is a \
-    simple web app that implements a simple tetris game clone.       \
-    the game should include a game board with a grid, a score display, and a reset button \
-    Code should be html, css and javascript, in a single file named index.html. \
-    Output will be markdown.  "
+
+part1="you are creating a tetris game using html, css and javascript. \
+The code will be generated in 3 files, index.html, index.css and index.js. \
+For this iteration, you will produce only the html file 'index.html'. \
+The css and javascript will be generated later."
+
+part2="you are creating a tetris game using html, css and javascript. \
+The code will be generated in 3 files, index.html, index.css and index.js. \
+The index.html file has already be created and is included in the prompt. \
+for this iteration, you will produce only the css file 'index.css' \
+The javascript will be generated later.\
+Use a modern light colorscheme with lots of contrast and detail. \
+Be sure the css file follows the class specifications in the index.html file."
+
+part3="you are creating a tetris game using html, css and javascript. \
+The code will be generated in 3 files, index.html, index.css and index.js. \
+The index.html file has already be created and is included in the prompt. \
+The index.css file has already be created and is included in the prompt. \
+for this iteration, you will produce only the javascript file 'index.js' "
+
 
 export BINDIR=../bin  
 make -C ../cmd
 
 # you will need API keys for each of these invocations. If you don't have one for a particular 
-# mode, you can change the model to one you have an API key for. use "">sqirvy-cli models" to see available models
+# mode, you can change the model to one you have an API key for. use ">sqirvy-cli models" to see available models
 # all context is pipelined through the processing units
 rm -rf tetris && mkdir tetris 
-echo $design | \
-$BINDIR/sqirvy-cli plan   -m gemini-1.5-flash                           | tee tetris/plan.md    | \
-$BINDIR/sqirvy-cli code   -m claude-3-7-sonnet-latest tetris/plan.md    | tee tetris/index.html | \
-$BINDIR/sqirvy-cli review -m gpt-4o-mini              tetris/index.html  >tetris/review.md   
+echo $part1 | $BINDIR/sqirvy-cli code -m gemini-2.5-pro-preview-03-25 > tetris/index.html
+echo $part2 | $BINDIR/sqirvy-cli code -m claude-3-7-sonnet-latest tetris/index.html >tetris/index.css
+echo $part3 | $BINDIR/sqirvy-cli code -m o4-mini tetris/index.html tetris/index.css > tetris/index.js
 
+# remove the delimiting triple backticks if present
+./strip.sh tetris/index.html
+./strip.sh tetris/index.css
+./strip.sh tetris/index.js
+
+
+# now review the code
+$BINDIR/sqirvy-cli review -m claude-3-7-sonnet-latest tetris/index.html tetris/index.css tetris/index.js > tetris/review.md
 python -m http.server 8080 --directory tetris 
 
 
