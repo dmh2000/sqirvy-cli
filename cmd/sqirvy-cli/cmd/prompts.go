@@ -60,10 +60,17 @@ func ReadPrompt(args []string) ([]string, error) {
 	if err != nil {
 		return []string{""}, fmt.Errorf("error: reading from stdin: %w", err)
 	}
-	prompts = append(prompts, stdinData)
-	length += int64(len(stdinData))
-	if length > MaxInputTotalBytes {
-		return nil, fmt.Errorf("error: total size would exceed limit of %d bytes (stdin)", MaxInputTotalBytes)
+	// Add markers only if stdinData is not empty
+	if len(stdinData) > 0 {
+		markedStdinData := fmt.Sprintf("--- START STDIN ---\n%s\n--- END STDIN ---", stdinData)
+		prompts = append(prompts, markedStdinData)
+		length += int64(len(markedStdinData))
+		if length > MaxInputTotalBytes {
+			return nil, fmt.Errorf("error: total size would exceed limit of %d bytes (stdin)", MaxInputTotalBytes)
+		}
+	} else {
+		// Append empty string if stdin is empty, maintaining the structure but adding no content/markers
+		prompts = append(prompts, "")
 	}
 
 	// Process each argument which can be either a URL or a file path
@@ -89,9 +96,10 @@ func ReadPrompt(args []string) ([]string, error) {
 			if err != nil {
 				return []string{""}, fmt.Errorf("error: failed to scrape URL %s: %w", arg, err)
 			}
-			content += "\n\n"
-			prompts = append(prompts, content)
-			length += int64(len(content))
+			// Add markers around URL content
+			markedContent := fmt.Sprintf("--- START URL: %s ---\n%s\n--- END URL: %s ---", arg, content, arg)
+			prompts = append(prompts, markedContent)
+			length += int64(len(markedContent))
 			if length > MaxInputTotalBytes {
 				return []string{""}, fmt.Errorf("error: total size would exceed limit of %d bytes (urls)", MaxInputTotalBytes)
 			}
@@ -103,17 +111,30 @@ func ReadPrompt(args []string) ([]string, error) {
 		if err != nil {
 			return []string{""}, fmt.Errorf("error: failed to read file %s: %w", arg, err)
 		}
-		prompts = append(prompts, string(fileData))
-		length += int64(len(fileData))
+		// Add markers around file content
+		markedFileData := fmt.Sprintf("--- START FILE: %s ---\n%s\n--- END FILE: %s ---", arg, string(fileData), arg)
+		prompts = append(prompts, markedFileData)
+		length += int64(len(markedFileData))
 		if length > MaxInputTotalBytes {
 			return []string{""}, fmt.Errorf("error: total size would exceed limit of %d bytes (files)", MaxInputTotalBytes)
 		}
 	}
 
-	// If no prompts were gathered from stdin or arguments, use the default prompt.
-	// This handles cases where stdin is not piped and no file/URL args are given.
-	if len(prompts) == 0 || (len(prompts) == 1 && prompts[0] == "") {
+	// Check if any actual content was added (beyond the initial potentially empty stdin prompt)
+	hasContent := false
+	if len(prompts) > 1 { // More than just the initial stdin placeholder
+		hasContent = true
+	} else if len(prompts) == 1 && prompts[0] != "" { // Stdin had content
+		hasContent = true
+	}
+
+	// If no content was gathered from stdin or arguments, use the default prompt.
+	if !hasContent {
+		// Replace the potentially empty stdin prompt with the default prompt
 		prompts = []string{defaultPrompt}
+	} else if len(prompts) > 0 && prompts[0] == "" {
+		// If stdin was empty but files/URLs were added, remove the empty stdin placeholder
+		prompts = prompts[1:]
 	}
 
 	return prompts, nil
