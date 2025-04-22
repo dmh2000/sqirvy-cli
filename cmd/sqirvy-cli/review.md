@@ -41,7 +41,7 @@ N/A 4. **prompts.go (line 104-112)**: When reading files, there's no check for f
 
 ## Style and Idiomatic Code
 
-1. **All files**: Inconsistent copyright notices. Some files contain empty placeholder copyright information `Copyright © 2025 NAME HERE <EMAIL ADDRESS>`.
+1. **All files**: Inconsistent copyright notices. Some files contain empty placeholder copyright information `Copyright © 2025 David Howard  dmh2000@gmail.com`.
 
 2. **prompts.go (line 48-55)**: Variable naming is not entirely consistent. Some variables use camelCase (e.g., `stdinData`) while others use snake_case in embedded comments.
 
