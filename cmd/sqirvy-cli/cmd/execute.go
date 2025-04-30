@@ -10,9 +10,6 @@ import (
 	"os"
 
 	sqirvy "dmh2000/sqirvy-cli/pkg/sqirvy"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // executeQuery processes and executes an AI model query with the given system prompt and arguments.
@@ -26,21 +23,12 @@ import (
 // Returns:
 //   - string: The model's response text
 //   - error: Any error encountered during execution
-func executeQuery(cmd *cobra.Command, system string, args []string) (string, error) {
-	// Extract model name from command flags
-	model := viper.GetString("model")
-
+func executeQuery(model string, temperature float64, system string, args []string) (string, error) {
 	// check if it has an alias
 	model = sqirvy.GetModelAlias(model)
 
 	// Print the selected model to stderr
 	fmt.Fprintln(os.Stderr, "Using model :", model)
-
-	// Extract temperature setting from command flags
-	temperature, err := cmd.Flags().GetFloat32("temperature")
-	if err != nil {
-		return "", fmt.Errorf("error: getting temperature: %v", err)
-	}
 
 	// Process system prompt and arguments into query prompts
 	prompts, err := ReadPrompt(args)

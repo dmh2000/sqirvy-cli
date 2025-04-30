@@ -64,7 +64,8 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	// Define persistent flags available to the root command and all subcommands.
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/sqirvy-cli/config.yaml)") // Example if config file flag was used
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/sqirvy-cli/config.yaml)") // Example if config file flag was used
+
 	rootCmd.PersistentFlags().StringVar(&defaultPrompt, "default-prompt", "Hello", "Default prompt if no stdin/args provided")
 	viper.BindPFlag("default-prompt", rootCmd.PersistentFlags().Lookup("default-prompt")) // Bind flag to Viper config
 

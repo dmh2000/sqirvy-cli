@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // planCmd represents the command to request a plan generation from the LLM.
@@ -17,7 +18,7 @@ import (
 var planCmd = &cobra.Command{
 	Use:   "plan",
 	Short: "Request the LLM to generate a plan",
-	Long: `sqiryv-cli plan:
+	Long: `sqirvy-cli plan:
 It will ask the LLM to generate a plan based on the given prompt. 
 It will send a request to the LLM and output the results to stdout.
 Typical usage would be to generate a plan for an application and send it 
@@ -27,8 +28,12 @@ The prompt is constructed in this order:
 	Input from stdin
 	Any number of filename or url arguments	`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// get arg/config params
+		model := viper.GetString("model")
+		temperature := viper.GetFloat64("temperature")
+
 		// Execute the query using the specific planning prompt
-		response, err := executeQuery(cmd, planPrompt, args)
+		response, err := executeQuery(model, temperature, planPrompt, args)
 		if err != nil {
 			log.Fatalf("Error executing plan command: %v", err)
 		}

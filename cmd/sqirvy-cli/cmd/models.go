@@ -23,6 +23,10 @@ var modelsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Retrieve the list of models and providers
 		mplist := sqirvy.GetModelProviderList()
+		if mplist == nil {
+			fmt.Println("No models found")
+			return
+		}
 
 		// Format the list for printing
 		var mptext []string

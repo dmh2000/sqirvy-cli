@@ -41,8 +41,6 @@ var modelRegistry = map[string]ModelInfo{
 	"claude-3-5-sonnet-latest":   {Provider: Anthropic, MaxTokens: 8192},
 	"claude-3-5-haiku-latest":    {Provider: Anthropic, MaxTokens: MAX_TOKENS_DEFAULT},
 	"claude-3-haiku-20240307":    {Provider: Anthropic, MaxTokens: MAX_TOKENS_DEFAULT},
-	"claude-3-opus-latest":       {Provider: Anthropic, MaxTokens: MAX_TOKENS_DEFAULT},
-	"claude-3-opus-20240229":     {Provider: Anthropic, MaxTokens: MAX_TOKENS_DEFAULT},
 	// google gemini models
 	"gemini-1.5-flash":               {Provider: Gemini, MaxTokens: MAX_TOKENS_DEFAULT},
 	"gemini-1.5-pro":                 {Provider: Gemini, MaxTokens: MAX_TOKENS_DEFAULT},

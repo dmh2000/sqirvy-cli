@@ -1,0 +1,7 @@
+# example configuration file
+
+# default model
+model: claude-3-5-haiku-latest
+
+# default temperature (0.0..1.0)
+temperature: 0.25

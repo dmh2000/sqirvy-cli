@@ -50,7 +50,6 @@ var reviewPrompt string
 //   - error: An error if reading stdin, scraping a URL, reading a file fails,
 //     or if the total combined size exceeds MaxInputTotalBytes.
 func ReadPrompt(args []string) ([]string, error) {
-
 	var prompts []string
 	var length int64 // Tracks the cumulative size of the prompts
 
@@ -58,7 +57,7 @@ func ReadPrompt(args []string) ([]string, error) {
 	var stdinData string
 	stdinData, _, err := util.ReadStdin(MaxInputTotalBytes)
 	if err != nil {
-		return []string{""}, fmt.Errorf("error: reading from stdin: %w", err)
+		return nil, fmt.Errorf("error: reading from stdin: %w", err)
 	}
 	// Add markers only if stdinData is not empty
 	if len(stdinData) > 0 {
@@ -82,26 +81,26 @@ func ReadPrompt(args []string) ([]string, error) {
 			hostname := parsedURL.Hostname()
 			ips, err := net.LookupIP(hostname)
 			if err != nil {
-				return []string{""}, fmt.Errorf("error: could not resolve hostname for URL %s: %w", arg, err)
+				return nil, fmt.Errorf("error: could not resolve hostname for URL %s: %w", arg, err)
 			}
 
 			for _, ip := range ips {
 				if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
-					return []string{""}, fmt.Errorf("error: URL %s resolves to a non-public IP address %s, potential SSRF detected", arg, ip.String())
+					return nil, fmt.Errorf("error: URL %s resolves to a non-public IP address %s, potential SSRF detected", arg, ip.String())
 				}
 			}
 
 			// Hostname resolves to public IPs, proceed with scraping
 			content, err := util.ScrapeURL(arg)
 			if err != nil {
-				return []string{""}, fmt.Errorf("error: failed to scrape URL %s: %w", arg, err)
+				return nil, fmt.Errorf("error: failed to scrape URL %s: %w", arg, err)
 			}
 			// Add markers around URL content
 			markedContent := fmt.Sprintf("--- START URL: %s ---\n%s\n--- END URL: %s ---", arg, content, arg)
 			prompts = append(prompts, markedContent)
 			length += int64(len(markedContent))
 			if length > MaxInputTotalBytes {
-				return []string{""}, fmt.Errorf("error: total size would exceed limit of %d bytes (urls)", MaxInputTotalBytes)
+				return nil, fmt.Errorf("error: total size would exceed limit of %d bytes (urls)", MaxInputTotalBytes)
 			}
 			continue
 		}
@@ -109,14 +108,14 @@ func ReadPrompt(args []string) ([]string, error) {
 		// Handle file content if not a URL
 		fileData, _, err := util.ReadFile(arg, MaxInputTotalBytes)
 		if err != nil {
-			return []string{""}, fmt.Errorf("error: failed to read file %s: %w", arg, err)
+			return nil, fmt.Errorf("error: failed to read file %s: %w", arg, err)
 		}
 		// Add markers around file content
 		markedFileData := fmt.Sprintf("--- START FILE: %s ---\n%s\n--- END FILE: %s ---", arg, string(fileData), arg)
 		prompts = append(prompts, markedFileData)
 		length += int64(len(markedFileData))
 		if length > MaxInputTotalBytes {
-			return []string{""}, fmt.Errorf("error: total size would exceed limit of %d bytes (files)", MaxInputTotalBytes)
+			return nil, fmt.Errorf("error: total size would exceed limit of %d bytes (files)", MaxInputTotalBytes)
 		}
 	}
 

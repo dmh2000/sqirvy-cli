@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // reviewCmd represents the command to request a code review from the LLM.
@@ -18,7 +19,7 @@ import (
 var reviewCmd = &cobra.Command{
 	Use:   "review",
 	Short: "Request the LLM to generate a code review",
-	Long: `sqiryv-cli review
+	Long: `sqirvy-cli review
 It will ask the LLM to review input code and will output the results to stdout.
 The prompt is constructed in this order:
     An internal system prompt for code review
@@ -26,8 +27,12 @@ The prompt is constructed in this order:
     Any number of filename or url arguments
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		// get arg/config params
+		model := viper.GetString("model")
+		temperature := viper.GetFloat64("temperature")
+
 		// Execute the query using the specific code review prompt
-		response, err := executeQuery(cmd, reviewPrompt, args)
+		response, err := executeQuery(model, temperature, reviewPrompt, args)
 		if err != nil {
 			log.Fatalf("Error executing review command: %v", err)
 		}

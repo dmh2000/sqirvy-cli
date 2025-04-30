@@ -9,6 +9,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // codeCmd represents the command to request code generation from the LLM.
@@ -18,7 +19,7 @@ import (
 var codeCmd = &cobra.Command{
 	Use:   "code",
 	Short: "Request the LLM to generate code",
-	Long: `sqiryv-cli code will send a request to generate code 
+	Long: `sqirvy-cli code will send a request to generate code 
 and will output the results to stdout.
 The prompt is constructed in this order:
 	An internal system prompt for code generation
@@ -26,8 +27,12 @@ The prompt is constructed in this order:
 	Any number of filename or url arguments	
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// get arg/config params
+		model := viper.GetString("model")
+		temperature := viper.GetFloat64("temperature")
+
 		// Execute the query using the specific code generation prompt
-		response, err := executeQuery(cmd, codePrompt, args)
+		response, err := executeQuery(model, temperature, codePrompt, args)
 		if err != nil {
 			log.Fatalf("Error executing code command: %v", err)
 		}
