@@ -24,26 +24,18 @@ const (
 	// MAX_TOKENS_DEFAULT is the default maximum number of tokens in responses
 	MAX_TOKENS_DEFAULT = 4096
 
-	// Temperature limits for model queries (0-100 scale)
-	MIN_TEMPERATURE = 0.0
-	MAX_TEMPERATURE = 100.0
-	TempScale       = 2.0
-
 	// request timeout in seconds
 	RequestTimeout = time.Second * 15
-)
 
-// Provider represents supported AI providers.
-// Currently supports Anthropic, DeepSeek, Gemini, and OpenAI.
-// Provider identifies which AI service provider to use
-type Provider string
+	// controls output to stderr
+	DebugMode = true
+)
 
 // Options combines all provider-specific options into a single structure.
 // This allows for provider-specific configuration while maintaining a unified interface.
 type Options struct {
-	Temperature      float32 // Controls the randomness of the output
-	TemperatureScale float32 // scaling for temperature range
-	MaxTokens        int64   // Maximum number of tokens in the response
+	Temperature float32 // Controls the randomness of the output
+	MaxTokens   int64   // Maximum number of tokens in the response
 }
 
 // Client provides a unified interface for AI operations.
@@ -60,25 +52,25 @@ func NewClient(provider string) (Client, error) {
 	case Anthropic:
 		client, err := NewAnthropicClient()
 		if err != nil {
-			return nil, fmt.Errorf("failed to create Anthropic client: %w", err)
+			return nil, fmt.Errorf("failed to create client for provider %s: %w", provider, err)
 		}
 		return client, nil
 	case Gemini:
 		client, err := NewGeminiClient()
 		if err != nil {
-			return nil, fmt.Errorf("failed to create Geminip client: %w", err)
+			return nil, fmt.Errorf("failed to create client for provider %s: %w", provider, err)
 		}
 		return client, nil
 	case OpenAI:
 		client, err := NewOpenAIClient()
 		if err != nil {
-			return nil, fmt.Errorf("failed to create OpenAI client: %w", err)
+			return nil, fmt.Errorf("failed to create client for provider %s: %w", provider, err)
 		}
 		return client, nil
 	case Llama:
 		client, err := NewLlamaClient()
 		if err != nil {
-			return nil, fmt.Errorf("failed to create Llama client: %w", err)
+			return nil, fmt.Errorf("failed to create client for provider %s: %w", provider, err)
 		}
 		return client, nil
 	default:
@@ -86,7 +78,7 @@ func NewClient(provider string) (Client, error) {
 	}
 }
 
-func QueryTextLangChain(ctx context.Context, llm llms.Model, system string, prompts []string, model string, options Options) (string, error) {
+func queryTextLangChain(ctx context.Context, llm llms.Model, system string, prompts []string, model string, options Options) (string, error) {
 	if ctx.Err() != nil {
 		return "", fmt.Errorf("request context error %w", ctx.Err())
 	}
@@ -118,7 +110,9 @@ func QueryTextLangChain(ctx context.Context, llm llms.Model, system string, prom
 
 	var response strings.Builder
 	for _, part := range completion.Choices {
-		fmt.Fprintf(os.Stderr, "response completion %s:%v\n", model, part.StopReason)
+		if DebugMode {
+			fmt.Fprintf(os.Stderr, "response completion %s:%v\n", model, part.StopReason)
+		}
 		response.WriteString(part.Content)
 	}
 

@@ -14,7 +14,7 @@ import (
 var cfgFile string
 var defaultPrompt = "Hello"
 
-const defaultModel = "gpt-4-turbo"
+const defaultModel = "gemini-2.5-flash-preview-04-17"
 const defaultTemperature = 0.5
 
 // rootCmd represents the base command when called without any subcommands

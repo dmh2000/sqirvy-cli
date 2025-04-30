@@ -22,9 +22,9 @@ models=(
     "gemini-2.0-flash-thinking-exp"
     "gemini-2.5-pro-exp-03-25"
     # OpenAI models
-    "gpt-4o"
-    "gpt-4o-mini"
-    "gpt-4-turbo"
+    # "gpt-4o"
+    # "gpt-4o-mini"
+    # "gpt-4-turbo"
     # Llama models
     "llama3.3-70b"
 )

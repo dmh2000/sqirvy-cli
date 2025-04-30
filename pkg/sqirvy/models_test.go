@@ -30,8 +30,9 @@ func TestAllModels(t *testing.T) {
 		},
 	}
 
-	// Test each model from ModelToProvider
-	for model, provider := range modelToProvider {
+	// Test each model from modelRegistry
+	for model, info := range modelRegistry {
+		provider := info.Provider
 		// Create client for this provider
 		client, err := NewClient(provider)
 		if err != nil {
@@ -62,7 +63,8 @@ func TestAllModels(t *testing.T) {
 			for _, tt := range tests {
 				t.Run(tt.name, func(t *testing.T) {
 					ctx := context.Background()
-					got, err := client.QueryText(ctx, assistant, tt.prompt, model, Options{MaxTokens: GetMaxTokens(model), Temperature: 0.5})
+					maxTokens, _ := GetMaxTokensWithError(model)
+					got, err := client.QueryText(ctx, assistant, tt.prompt, model, Options{MaxTokens: maxTokens, Temperature: 0.5})
 					if tt.wantErr {
 						if err == nil {
 							t.Errorf("QueryText() error = nil, wantErr %v", tt.wantErr)

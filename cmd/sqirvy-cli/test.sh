@@ -78,7 +78,7 @@ echo "sqirvy review"
 check_return_code                 $TARGET review -m gemini-1.5-flash main.go          >$TESTDIR/review.md
 echo "-------------------------------"
 echo "sqirvy query"
-check_return_code echo $query |   $TARGET query -m gpt-4-turbo  main.go               >$TESTDIR/query1.md
+check_return_code echo $query |   $TARGET query -m claude-3-haiku-20240307 main.go    >$TESTDIR/query1.md
 echo "-------------------------------"
 echo "sqirvy "
 check_return_code echo $query |   $TARGET query -m llama3.3-70b                       >$TESTDIR/query2.md
