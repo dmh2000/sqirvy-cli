@@ -1,0 +1,107 @@
+[
+  {
+    "away_team_abbr": "WSH",
+    "away_team_full": "Washington Nationals",
+    "home_team_abbr": "CIN",
+    "home_team_full": "Cincinnati Reds",
+    "time": "6:10 PM ET"
+  },
+  {
+    "away_team_abbr": "SD",
+    "away_team_full": "San Diego Padres",
+    "home_team_abbr": "PIT",
+    "home_team_full": "Pittsburgh Pirates",
+    "time": "6:40 PM ET"
+  },
+  {
+    "away_team_abbr": "AZ",
+    "away_team_full": "Arizona Diamondbacks",
+    "home_team_abbr": "PHI",
+    "home_team_full": "Philadelphia Phillies",
+    "time": "6:45 PM ET"
+  },
+  {
+    "away_team_abbr": "KC",
+    "away_team_full": "Kansas City Royals",
+    "home_team_abbr": "BAL",
+    "home_team_full": "Baltimore Orioles",
+    "time": "7:05 PM ET"
+  },
+  {
+    "away_team_abbr": "TB",
+    "away_team_full": "Tampa Bay Rays",
+    "home_team_abbr": "NYY",
+    "home_team_full": "New York Yankees",
+    "time": "7:05 PM ET"
+  },
+  {
+    "away_team_abbr": "CLE",
+    "away_team_full": "Cleveland Guardians",
+    "home_team_abbr": "TOR",
+    "home_team_full": "Toronto Blue Jays",
+    "time": "7:07 PM ET"
+  },
+  {
+    "away_team_abbr": "MIN",
+    "away_team_full": "Minnesota Twins",
+    "home_team_abbr": "BOS",
+    "home_team_full": "Boston Red Sox",
+    "time": "7:10 PM ET"
+  },
+  {
+    "away_team_abbr": "ATH",
+    "away_team_full": "Athletics",
+    "home_team_abbr": "MIA",
+    "home_team_full": "Miami Marlins",
+    "time": "7:10 PM ET"
+  },
+  {
+    "away_team_abbr": "LAD",
+    "away_team_full": "Los Angeles Dodgers",
+    "home_team_abbr": "ATL",
+    "home_team_full": "Atlanta Braves",
+    "time": "7:15 PM ET"
+  },
+  {
+    "away_team_abbr": "HOU",
+    "away_team_full": "Houston Astros",
+    "home_team_abbr": "CWS",
+    "home_team_full": "Chicago White Sox",
+    "time": "7:40 PM ET"
+  },
+  {
+    "away_team_abbr": "SEA",
+    "away_team_full": "Seattle Mariners",
+    "home_team_abbr": "TEX",
+    "home_team_full": "Texas Rangers",
+    "time": "8:05 PM ET"
+  },
+  {
+    "away_team_abbr": "CHC",
+    "away_team_full": "Chicago Cubs",
+    "home_team_abbr": "MIL",
+    "home_team_full": "Milwaukee Brewers",
+    "time": "8:10 PM ET"
+  },
+  {
+    "away_team_abbr": "NYM",
+    "away_team_full": "New York Mets",
+    "home_team_abbr": "STL",
+    "home_team_full": "St. Louis Cardinals",
+    "time": "8:15 PM ET"
+  },
+  {
+    "away_team_abbr": "DET",
+    "away_team_full": "Detroit Tigers",
+    "home_team_abbr": "LAA",
+    "home_team_full": "Los Angeles Angels",
+    "time": "9:38 PM ET"
+  },
+  {
+    "away_team_abbr": "COL",
+    "away_team_full": "Colorado Rockies",
+    "home_team_abbr": "SF",
+    "home_team_full": "San Francisco Giants",
+    "time": "10:15 PM ET"
+  }
+]

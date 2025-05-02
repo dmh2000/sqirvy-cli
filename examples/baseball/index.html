@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baseball Schedule</title>
+    <style>
+        :root {
+            --dark-blue: #1a1a2e;
+            --purple: #4a266a;
+            --yellow: #ffd700;
+            --light-text: #e6e6e6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--dark-blue);
+            color: var(--light-text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--purple);
+        }
+        
+        h1 {
+            color: var(--yellow);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .game-card {
+            background-color: var(--purple);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .teams {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .vs {
+            margin: 0 10px;
+            color: var(--yellow);
+            font-weight: bold;
+        }
+        
+        .team-name {
+            font-weight: bold;
+        }
+        
+        .team-abbr {
+            color: var(--yellow);
+            font-size: 0.9rem;
+            margin-left: 5px;
+        }
+        
+        .game-time {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--yellow);
+            margin-top: 10px;
+        }
+        
+        a {
+            color: var(--light-text);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--yellow);
+            transition: color 0.2s ease;
+        }
+        
+        a:hover {
+            color: var(--yellow);
+        }
+        
+        .loading {
+            text-align: center;
+            font-size: 1.5rem;
+            padding: 50px;
+            color: var(--yellow);
+        }
+        
+        .error {
+            text-align: center;
+            color: #ff6b6b;
+            padding: 20px;
+            background-color: rgba(255, 107, 107, 0.1);
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .schedule-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Baseball Schedule</h1>
+        <p>Today's Games</p>
+    </header>
+    
+    <div class="container">
+        <div id="schedule" class="schedule-grid">
+            <div class="loading">Loading schedule...</div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchSchedule();
+        });
+        
+        async function fetchSchedule() {
+            try {
+                const response = await fetch('http://localhost:8080/schedule/json');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch schedule data');
+                }
+                
+                const scheduleData = await response.json();
+                displaySchedule(scheduleData);
+            } catch (error) {
+                console.error('Error fetching schedule:', error);
+                document.getElementById('schedule').innerHTML = `
+                    <div class="error">
+                        <p>Failed to load schedule data. Please try again later.</p>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displaySchedule(scheduleData) {
+            const scheduleContainer = document.getElementById('schedule');
+            
+            if (!scheduleData || scheduleData.length === 0) {
+                scheduleContainer.innerHTML = '<div class="error">No games scheduled for today.</div>';
+                return;
+            }
+            
+            scheduleContainer.innerHTML = '';
+            
+            scheduleData.forEach(game => {
+                const gameCard = document.createElement('div');
+                gameCard.className = 'game-card';
+                
+                gameCard.innerHTML = `
+                    <div class="teams">
+                        <div class="away-team">
+                            <span class="team-name">
+                                <a href="https://www.google.com/search?q=${encodeURIComponent(game.away_team_full)}" target="_blank">
+                                    ${game.away_team_full}
+                                </a>
+                            </span>
+                            <span class="team-abbr">(${game.away_team_abbr})</span>
+                        </div>
+                        <span class="vs">@</span>
+                        <div class="home-team">
+                            <span class="team-name">
+                                <a href="https://www.google.com/search?q=${encodeURIComponent(game.home_team_full)}" target="_blank">
+                                    ${game.home_team_full}
+                                </a>
+                            </span>
+                            <span class="team-abbr">(${game.home_team_abbr})</span>
+                        </div>
+                    </div>
+                    <div class="game-time">${game.time}</div>
+                `;
+                
+                scheduleContainer.appendChild(gameCard);
+            });
+        }
+    </script>
+</body>
+</html>

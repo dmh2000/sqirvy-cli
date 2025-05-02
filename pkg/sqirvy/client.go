@@ -28,7 +28,7 @@ const (
 	RequestTimeout = time.Second * 15
 
 	// controls output to stderr
-	DebugMode = true
+	DebugMode = false
 )
 
 // Options combines all provider-specific options into a single structure.
